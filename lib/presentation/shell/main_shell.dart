@@ -37,20 +37,21 @@ class MainShell extends StatelessWidget {
           NavigationDestination(
             icon: Icon(Icons.school_outlined),
             selectedIcon: Icon(Icons.school),
-            label: 'Estudio',
+            label: 'Productividad',
           ),
           NavigationDestination(
-            icon: Icon(Icons.calendar_month_outlined),
-            selectedIcon: Icon(Icons.calendar_month),
-            label: 'Calendario',
+            icon: Icon(Icons.checklist_outlined),
+            selectedIcon: Icon(Icons.checklist),
+            label: 'Pendientes',
           ),
           NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: 'Perfil',
+            icon: Icon(Icons.settings_outlined),
+            selectedIcon: Icon(Icons.settings),
+            label: 'Configuración',
           ),
         ],
       ),
     );
   }
 }
+
