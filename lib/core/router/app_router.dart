@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:habivi/presentation/features/calendar/calendar_screen.dart';
+import 'package:habivi/presentation/features/task/task_screen.dart';
 import 'package:habivi/presentation/features/habits/habit_detail_screen.dart';
 import 'package:habivi/presentation/features/habits/habits_list_screen.dart';
 import 'package:habivi/presentation/features/home/home_screen.dart';
 import 'package:habivi/presentation/features/notes/notes_screen.dart';
-import 'package:habivi/presentation/features/profile/profile_screen.dart';
-import 'package:habivi/presentation/features/study/study_hub_screen.dart';
+import 'package:habivi/presentation/features/settings/settings_screen.dart';
+import 'package:habivi/presentation/features/Productivity/productivity_screen.dart';
 import 'package:habivi/presentation/shell/main_shell.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -51,7 +51,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/study',
-                builder: (context, state) => const StudyHubScreen(),
+                builder: (context, state) => const ProductivityScreen(),
               ),
             ],
           ),
@@ -59,7 +59,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/calendar',
-                builder: (context, state) => const CalendarScreen(),
+                builder: (context, state) => const TaskScreen(),
               ),
             ],
           ),
@@ -67,7 +67,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/profile',
-                builder: (context, state) => const ProfileScreen(),
+                builder: (context, state) => const SettingsScreen(),
               ),
             ],
           ),

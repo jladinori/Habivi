@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:habivi/presentation/shared/widgets/placeholder_card.dart';
 
-class StudyHubScreen extends StatelessWidget {
-  const StudyHubScreen({super.key});
+class ProductivityScreen extends StatelessWidget {
+  const ProductivityScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -11,7 +11,7 @@ class StudyHubScreen extends StatelessWidget {
       children: [
         const SizedBox(height: 16),
         Text(
-          'Mproductividad',
+          'Productividad',
           style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                 fontWeight: FontWeight.bold,
               ),

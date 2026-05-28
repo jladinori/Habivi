@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:habivi/presentation/shared/widgets/placeholder_card.dart';
 
-class CalendarScreen extends StatelessWidget {
-  const CalendarScreen({super.key});
+class TaskScreen extends StatelessWidget {
+  const TaskScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -10,8 +10,8 @@ class CalendarScreen extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       children: const [
         PlaceholderCard(
-          title: 'Calendario',
-          subtitle: 'Eventos y fechas importantes del semestre.',
+          title: 'Tareas',
+          subtitle: 'Lista de tareas pendientes.',
         ),
       ],
     );
