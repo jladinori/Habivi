@@ -18,10 +18,18 @@ class Habito {
   @HiveField(3)
   String tipo;
 
+  @HiveField(4)
+  bool completadoHoy;
+
+  @HiveField(5)
+  String fechaUltimoCompletado;
+
   Habito(
     this.idHabito,
     this.nombreHabito,
     this.atributo,
-    this.tipo,
-  );
+    this.tipo, {
+    this.completadoHoy = false,
+    this.fechaUltimoCompletado = '',
+  });
 }

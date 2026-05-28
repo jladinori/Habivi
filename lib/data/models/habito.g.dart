@@ -21,13 +21,15 @@ class HabitoAdapter extends TypeAdapter<Habito> {
       fields[1] as String,
       fields[2] as String,
       fields[3] as String,
+      completadoHoy: fields[4] as bool,
+      fechaUltimoCompletado: fields[5] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, Habito obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(6)
       ..writeByte(0)
       ..write(obj.idHabito)
       ..writeByte(1)
@@ -35,7 +37,11 @@ class HabitoAdapter extends TypeAdapter<Habito> {
       ..writeByte(2)
       ..write(obj.atributo)
       ..writeByte(3)
-      ..write(obj.tipo);
+      ..write(obj.tipo)
+      ..writeByte(4)
+      ..write(obj.completadoHoy)
+      ..writeByte(5)
+      ..write(obj.fechaUltimoCompletado);
   }
 
   @override
