@@ -50,7 +50,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/study',
+                path: '/productivity',
                 builder: (context, state) => const ProductivityScreen(),
               ),
             ],
@@ -58,7 +58,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/calendar',
+                path: '/tasks',
                 builder: (context, state) => const TaskScreen(),
               ),
             ],
@@ -66,7 +66,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/profile',
+                path: '/settings',
                 builder: (context, state) => const SettingsScreen(),
               ),
             ],

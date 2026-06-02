@@ -20,19 +20,22 @@ class TareaAdapter extends TypeAdapter<Tarea> {
       fields[0] as int,
       fields[1] as String,
       fields[2] as int,
+      metadata: fields[3] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, Tarea obj) {
     writer
-      ..writeByte(3)
+      ..writeByte(4)
       ..writeByte(0)
       ..write(obj.idTarea)
       ..writeByte(1)
       ..write(obj.nombreTarea)
       ..writeByte(2)
-      ..write(obj.puntaje);
+      ..write(obj.puntaje)
+      ..writeByte(3)
+      ..write(obj.metadata);
   }
 
   @override
