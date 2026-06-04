@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'dart:js' as js;
 
 class PomodoroScreen extends StatefulWidget {
   const PomodoroScreen({super.key});
@@ -21,14 +22,27 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
     return '$min:$sec';
   }
 
+  Future<void> _playAlarmSound() async {
+    try {
+      // Usar Web Audio API para reproducir un beep (solo en web)
+      js.context.callMethod('playBeep');
+      debugPrint('Alarma: ¡Sesión finalizada!');
+    } catch (e) {
+      debugPrint('Error en alarma: $e');
+    }
+  }
+
   void _start() {
     if (_isRunning) return;
     setState(() => _isRunning = true);
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_remainingSeconds <= 0) {
         _stopTimer();
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('¡Sesión finalizada!')));
+        _playAlarmSound();
+        if (mounted) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(const SnackBar(content: Text('¡Sesión finalizada!')));
+        }
         return;
       }
       setState(() => _remainingSeconds -= 1);
