@@ -8,6 +8,7 @@ import 'package:habivi/presentation/features/home/home_screen.dart';
 import 'package:habivi/presentation/features/notes/notes_screen.dart';
 import 'package:habivi/presentation/features/settings/settings_screen.dart';
 import 'package:habivi/presentation/features/Productivity/productivity_screen.dart';
+import 'package:habivi/presentation/features/Productivity/pomodoro_screen.dart';
 import 'package:habivi/presentation/shell/main_shell.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -76,6 +77,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/notes',
         builder: (context, state) => const NotesScreen(),
+      ),
+      GoRoute(
+        path: '/pomodoro',
+        builder: (context, state) => const PomodoroScreen(),
       ),
     ],
   );
