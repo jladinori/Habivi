@@ -7,20 +7,30 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        const PlaceholderCard(
-          title: 'Configuración',
-          subtitle: 'Preferencias y ajustes de la aplicación.',
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Configuración'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          tooltip: 'Volver a Inicio',
+          onPressed: () => context.go('/home'),
         ),
-        const SizedBox(height: 12),
-        ListTile(
-          leading: const Icon(Icons.note_alt_outlined),
-          title: const Text('Notas'),
-          onTap: () => context.push('/notes'),
-        ),
-      ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          const PlaceholderCard(
+            title: 'Configuración',
+            subtitle: 'Preferencias y ajustes de la aplicación.',
+          ),
+          const SizedBox(height: 12),
+          ListTile(
+            leading: const Icon(Icons.note_alt_outlined),
+            title: const Text('Notas'),
+            onTap: () => context.push('/notes'),
+          ),
+        ],
+      ),
     );
   }
 }

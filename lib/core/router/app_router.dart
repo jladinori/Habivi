@@ -7,8 +7,8 @@ import 'package:habivi/presentation/features/habits/habits_list_screen.dart';
 import 'package:habivi/presentation/features/home/home_screen.dart';
 import 'package:habivi/presentation/features/notes/notes_screen.dart';
 import 'package:habivi/presentation/features/settings/settings_screen.dart';
-import 'package:habivi/presentation/features/Productivity/productivity_screen.dart';
-import 'package:habivi/presentation/features/Productivity/pomodoro_screen.dart';
+import 'package:habivi/presentation/features/productivity/productivity_screen.dart';
+import 'package:habivi/presentation/features/productivity/pomodoro_screen.dart';
 import 'package:habivi/presentation/shell/main_shell.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -64,14 +64,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/settings',
-                builder: (context, state) => const SettingsScreen(),
-              ),
-            ],
-          ),
         ],
       ),
       GoRoute(
@@ -81,6 +73,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/pomodoro',
         builder: (context, state) => const PomodoroScreen(),
+      ),
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => const SettingsScreen(),
       ),
     ],
   );

@@ -69,8 +69,6 @@ class _HabitContributionBoardState extends State<HabitContributionBoard> {
                     final dia = lunesSemana.add(Duration(days: rowIndex));
                     final esFuturo = dia.isAfter(hoy);
 
-                    //
-
                     final fechaStr =
                         '${dia.year}-${dia.month.toString().padLeft(2, '0')}-${dia.day.toString().padLeft(2, '0')}';
                     final completado = widget.fechasCompletadas.contains(fechaStr);

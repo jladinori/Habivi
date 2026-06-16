@@ -233,11 +233,6 @@ class _TaskScreenState extends State<TaskScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                   ),
-                  FloatingActionButton(
-                    mini: true,
-                    onPressed: _mostrarDialogoAgregar,
-                    child: const Icon(Icons.add),
-                  ),
                 ],
               ),
             ),
@@ -319,6 +314,11 @@ class _TaskScreenState extends State<TaskScreen> {
             ),
           ],
         ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: FloatingActionButton(
+        onPressed: _mostrarDialogoAgregar,
+        child: const Icon(Icons.add),
       ),
     );
   }

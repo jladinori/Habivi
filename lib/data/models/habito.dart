@@ -29,6 +29,31 @@ class Habito {
 
   List<String> get safeFechasCompletadas => fechasCompletadas ?? [];
 
+  String get aspecto {
+    if (tipo.contains('|')) {
+      return tipo.split('|')[0];
+    }
+    return 'físico'; // Default aspect
+  }
+
+  String get iconoKey {
+    if (tipo.contains('|')) {
+      final parts = tipo.split('|');
+      if (parts.length > 1) return parts[1];
+    }
+    // Default fallback based on ID
+    final defaultKeys = ['spa', 'heart', 'book', 'smoke'];
+    return defaultKeys[idHabito % defaultKeys.length];
+  }
+
+  set aspecto(String val) {
+    tipo = "${val}|${iconoKey}";
+  }
+
+  set iconoKey(String val) {
+    tipo = "${aspecto}|${val}";
+  }
+
   Habito(
     this.idHabito,
     this.nombreHabito,

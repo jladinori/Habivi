@@ -4,19 +4,39 @@ import 'package:habivi/data/models/habito.dart';
 import 'package:habivi/data/repositories/habit_repository.dart';
 import 'package:habivi/presentation/shared/widgets/habit_contribution_board.dart';
 
-class _HabitTheme {
-  final Color color;
-  final IconData icon;
-
-  const _HabitTheme(this.color, this.icon);
-}
-
-const List<_HabitTheme> _habitThemes = [
-  _HabitTheme(Color(0xFFEC407A), Icons.spa),          // Pink
-  _HabitTheme(Color(0xFFFFB300), Icons.monitor_heart), // Yellow/Orange
-  _HabitTheme(Color(0xFF42A5F5), Icons.menu_book),     // Blue
-  _HabitTheme(Color(0xFF66BB6A), Icons.smoking_rooms),  // Green
+const List<Color> _habitColors = [
+  Color(0xFFEC407A), // Pink
+  Color(0xFFFFB300), // Yellow/Orange
+  Color(0xFF42A5F5), // Blue
+  Color(0xFF66BB6A), // Green
 ];
+
+const Map<String, IconData> _disponiblesIconos = {
+  // Físico
+  'run': Icons.directions_run,
+  'gym': Icons.fitness_center,
+  'bike': Icons.pedal_bike,
+  'water': Icons.water_drop,
+  'heart': Icons.monitor_heart,
+  // Mental
+  'book': Icons.menu_book,
+  'code': Icons.code,
+  'brain': Icons.psychology,
+  'brush': Icons.brush,
+  'lightbulb': Icons.lightbulb,
+  // Espiritual
+  'spa': Icons.spa,
+  'meditation': Icons.self_improvement,
+  'sleep': Icons.bedtime,
+  'nature': Icons.nature_people,
+  'star': Icons.star,
+};
+
+const Map<String, List<String>> _iconosPorAspecto = {
+  'físico': ['run', 'gym', 'bike', 'water', 'heart'],
+  'mental': ['book', 'code', 'brain', 'brush', 'lightbulb'],
+  'espiritual': ['spa', 'meditation', 'sleep', 'nature', 'star'],
+};
 
 class HabitsListScreen extends ConsumerStatefulWidget {
   const HabitsListScreen({super.key});
@@ -28,7 +48,6 @@ class HabitsListScreen extends ConsumerStatefulWidget {
 class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
   late HabitRepository _repository;
   List<Habito> _habitos = [];
-  final _nombreController = TextEditingController();
 
   @override
   void initState() {
@@ -76,26 +95,37 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
     return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
   }
 
-  Future<void> _addHabito() async {
-    if (_nombreController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor ingresa un nombre')),
-      );
-      return;
+  IconData _getIconForHabit(Habito habito) {
+    final key = habito.iconoKey;
+    if (_disponiblesIconos.containsKey(key)) {
+      return _disponiblesIconos[key]!;
     }
+    return Icons.spa;
+  }
 
+  Future<void> _agregarHabitoDialogo(String nombre, String descripcion, String aspecto) async {
     try {
+      final nextId = _habitos.isEmpty ? 0 : _habitos.map((h) => h.idHabito).reduce((a, b) => a > b ? a : b) + 1;
+      
+      final defaultIconForAspect = {
+        'físico': 'run',
+        'mental': 'book',
+        'espiritual': 'spa',
+      };
+      final defaultIcon = defaultIconForAspect[aspecto] ?? 'spa';
+      final tipoSerializado = "${aspecto}|${defaultIcon}";
+
       final nuevoHabito = Habito(
-        _habitos.isEmpty ? 0 : _habitos.map((h) => h.idHabito).reduce((a, b) => a > b ? a : b) + 1,
-        _nombreController.text.trim(),
-        'Cada día cuenta para mejorar.',
-        'positivo',
+        nextId,
+        nombre,
+        descripcion.isNotEmpty ? descripcion : 'Cada día cuenta para mejorar.',
+        tipoSerializado,
         completadoHoy: false,
         fechaUltimoCompletado: '',
         fechasCompletadas: [],
       );
+
       await _repository.add(nuevoHabito);
-      _nombreController.clear();
       await _loadHabitos();
     } catch (e) {
       if (mounted) {
@@ -164,10 +194,179 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
     }
   }
 
-  @override
-  void dispose() {
-    _nombreController.dispose();
-    super.dispose();
+  void _mostrarSelectorIconos(int index, Habito habito) {
+    final color = _habitColors[habito.idHabito % _habitColors.length];
+    final listIconos = _iconosPorAspecto[habito.aspecto] ?? _iconosPorAspecto['físico']!;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Selector de íconos (${habito.aspecto})'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: GridView.builder(
+              shrinkWrap: true,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 5,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+              ),
+              itemCount: listIconos.length,
+              itemBuilder: (context, i) {
+                final key = listIconos[i];
+                final icon = _disponiblesIconos[key]!;
+                final esSeleccionado = habito.iconoKey == key;
+
+                return InkWell(
+                  onTap: () async {
+                    habito.iconoKey = key;
+                    await _repository.updateAt(index, habito);
+                    setState(() {});
+                    Navigator.pop(context);
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: esSeleccionado ? color : Colors.transparent,
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Icon(icon, color: Colors.white),
+                  ),
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _mostrarDialogoAgregarHabito() {
+    final nameController = TextEditingController();
+    final descController = TextEditingController();
+    String seleccionadoAspecto = 'físico';
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              title: const Text('Nuevo Hábito'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: nameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Nombre del hábito',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: descController,
+                      decoration: const InputDecoration(
+                        labelText: 'Descripción (opcional)',
+                        hintText: 'Cada día cuenta para mejorar.',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Aspecto:',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8.0,
+                      runSpacing: 8.0,
+                      alignment: WrapAlignment.center,
+                      children: [
+                        ChoiceChip(
+                          label: const Text('Físico'),
+                          selected: seleccionadoAspecto == 'físico',
+                          onSelected: (selected) {
+                            if (selected) {
+                              setStateDialog(() {
+                                seleccionadoAspecto = 'físico';
+                              });
+                            }
+                          },
+                        ),
+                        ChoiceChip(
+                          label: const Text('Mental'),
+                          selected: seleccionadoAspecto == 'mental',
+                          onSelected: (selected) {
+                            if (selected) {
+                              setStateDialog(() {
+                                seleccionadoAspecto = 'mental';
+                              });
+                            }
+                          },
+                        ),
+                        ChoiceChip(
+                          label: const Text('Espiritual'),
+                          selected: seleccionadoAspecto == 'espiritual',
+                          onSelected: (selected) {
+                            if (selected) {
+                              setStateDialog(() {
+                                seleccionadoAspecto = 'espiritual';
+                              });
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancelar'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    final nombre = nameController.text.trim();
+                    if (nombre.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Escribe un nombre')),
+                      );
+                      return;
+                    }
+                    Navigator.pop(context);
+                    _agregarHabitoDialogo(
+                      nombre,
+                      descController.text.trim(),
+                      seleccionadoAspecto,
+                    );
+                  },
+                  child: const Text('Agregar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    ).then((_) {
+      nameController.dispose();
+      descController.dispose();
+    });
   }
 
   @override
@@ -178,43 +377,11 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Hábitos',
-                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _nombreController,
-                          decoration: InputDecoration(
-                            hintText: 'Nuevo hábito...',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                          ),
-                          onSubmitted: (_) => _addHabito(),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      FloatingActionButton(
-                        mini: true,
-                        onPressed: _addHabito,
-                        child: const Icon(Icons.add),
-                      ),
-                    ],
-                  ),
-                ],
+              child: Text(
+                'Hábitos',
+                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
             ),
             Expanded(
@@ -226,11 +393,12 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                       ),
                     )
                   : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.only(left: 16, right: 16, bottom: 80),
                       itemCount: _habitos.length,
                       itemBuilder: (context, index) {
                         final habito = _habitos[index];
-                        final theme = _habitThemes[index % _habitThemes.length];
+                        final color = _habitColors[habito.idHabito % _habitColors.length];
+                        final icon = _getIconForHabit(habito);
 
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 16),
@@ -269,18 +437,21 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                                   children: [
                                     Row(
                                       children: [
-                                        // Icono decorado con fondo opaco
-                                        Container(
-                                          width: 44,
-                                          height: 44,
-                                          decoration: BoxDecoration(
-                                            color: theme.color.withOpacity(0.12),
-                                            borderRadius: BorderRadius.circular(10),
-                                          ),
-                                          child: Icon(
-                                            theme.icon,
-                                            color: theme.color,
-                                            size: 24,
+                                        // Icono decorado con fondo opaco y selector interactivo al pulsar
+                                        GestureDetector(
+                                          onTap: () => _mostrarSelectorIconos(index, habito),
+                                          child: Container(
+                                            width: 44,
+                                            height: 44,
+                                            decoration: BoxDecoration(
+                                              color: color.withOpacity(0.12),
+                                              borderRadius: BorderRadius.circular(10),
+                                            ),
+                                            child: Icon(
+                                              icon,
+                                              color: color,
+                                              size: 24,
+                                            ),
                                           ),
                                         ),
                                         const SizedBox(width: 12),
@@ -324,7 +495,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                                             height: 44,
                                             decoration: BoxDecoration(
                                               color: habito.completadoHoy
-                                                  ? theme.color
+                                                  ? color
                                                   : Colors.white.withOpacity(0.05),
                                               borderRadius: BorderRadius.circular(10),
                                               border: Border.all(
@@ -346,10 +517,10 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                                       ],
                                     ),
                                     const SizedBox(height: 16),
-                                    // Tablero de contribuciones del año
+                                    // Tablero de contribuciones del año alineado por semanas
                                     HabitContributionBoard(
                                       fechasCompletadas: habito.safeFechasCompletadas,
-                                      baseColor: theme.color,
+                                      baseColor: color,
                                     ),
                                   ],
                                 ),
@@ -362,6 +533,11 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
             ),
           ],
         ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: FloatingActionButton(
+        onPressed: _mostrarDialogoAgregarHabito,
+        child: const Icon(Icons.add),
       ),
     );
   }
