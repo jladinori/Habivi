@@ -24,6 +24,11 @@ class Habito {
   @HiveField(5)
   String fechaUltimoCompletado;
 
+  @HiveField(6)
+  List<String>? fechasCompletadas;
+
+  List<String> get safeFechasCompletadas => fechasCompletadas ?? [];
+
   Habito(
     this.idHabito,
     this.nombreHabito,
@@ -31,5 +36,6 @@ class Habito {
     this.tipo, {
     this.completadoHoy = false,
     this.fechaUltimoCompletado = '',
-  });
+    List<String>? fechasCompletadas,
+  }) : fechasCompletadas = fechasCompletadas ?? [];
 }
