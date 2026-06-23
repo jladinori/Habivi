@@ -196,7 +196,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               title: const Text('Notas'),
               trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.push('/notes'),
+              onTap: () => context.push('/settings/notes'),
             ),
           ),
           const SizedBox(height: 24),

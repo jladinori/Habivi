@@ -53,6 +53,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/productivity',
                 builder: (context, state) => const ProductivityScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'pomodoro',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) => const PomodoroScreen(),
+                  ),
+                ],
               ),
             ],
           ),
@@ -64,19 +71,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/settings',
+                builder: (context, state) => const SettingsScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'notes',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) => const NotesScreen(),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ],
-      ),
-      GoRoute(
-        path: '/notes',
-        builder: (context, state) => const NotesScreen(),
-      ),
-      GoRoute(
-        path: '/pomodoro',
-        builder: (context, state) => const PomodoroScreen(),
-      ),
-      GoRoute(
-        path: '/settings',
-        builder: (context, state) => const SettingsScreen(),
       ),
     ],
   );
