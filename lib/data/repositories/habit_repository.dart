@@ -14,6 +14,7 @@ class HabitRepository {
   Future<void> add(Habito habito) async {
     final b = await box;
     await b.add(habito);
+    await b.flush();
   }
 
   Future<Map<dynamic, Habito>> readAll() async {
@@ -24,11 +25,13 @@ class HabitRepository {
   Future<void> deleteAt(int index) async {
     final b = await box;
     await b.deleteAt(index);
+    await b.flush();
   }
 
   Future<void> updateAt(int index, Habito habito) async {
     final b = await box;
     await b.putAt(index, habito);
+    await b.flush();
   }
 
   Future<void> dispose() async {

@@ -26,7 +26,7 @@ abstract final class AppTheme {
           if (states.contains(WidgetState.selected)) {
             return TextStyle(color: colorScheme.primary);
           }
-          return TextStyle(color: AppColors.onSurfaceMuted);
+          return const TextStyle(color: AppColors.onSurfaceMuted);
         }),
       ),
       cardTheme: CardThemeData(

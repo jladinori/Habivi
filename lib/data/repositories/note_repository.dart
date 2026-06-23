@@ -14,6 +14,7 @@ class NoteRepository {
   Future<void> add(Nota nota) async {
     final b = await box;
     await b.add(nota);
+    await b.flush();
   }
 
   Future<Map<dynamic, Nota>> readAll() async {
@@ -24,11 +25,13 @@ class NoteRepository {
   Future<void> deleteAt(int index) async {
     final b = await box;
     await b.deleteAt(index);
+    await b.flush();
   }
 
   Future<void> updateAt(int index, Nota nota) async {
     final b = await box;
     await b.putAt(index, nota);
+    await b.flush();
   }
 
   Future<void> dispose() async {

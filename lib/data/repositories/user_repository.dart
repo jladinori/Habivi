@@ -14,6 +14,7 @@ class UserRepository {
   Future<void> add(Usuario usuario) async {
     final b = await box;
     await b.add(usuario);
+    await b.flush();
   }
 
   Future<Map<dynamic, Usuario>> readAll() async {
@@ -24,11 +25,13 @@ class UserRepository {
   Future<void> deleteAt(int index) async {
     final b = await box;
     await b.deleteAt(index);
+    await b.flush();
   }
 
   Future<void> updateAt(int index, Usuario usuario) async {
     final b = await box;
     await b.putAt(index, usuario);
+    await b.flush();
   }
 
   Future<void> dispose() async {

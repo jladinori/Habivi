@@ -81,11 +81,11 @@ class _HabitContributionBoardState extends State<HabitContributionBoard> {
                       height: 8,
                       margin: const EdgeInsets.symmetric(vertical: 1.5),
                       decoration: BoxDecoration(
-                        color: completado ? widget.baseColor : widget.baseColor.withOpacity(0.12),
+                        color: completado ? widget.baseColor : widget.baseColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(2.0),
                         border: esHoy
                             ? Border.all(
-                                color: Colors.white.withOpacity(0.8),
+                                color: Colors.white.withValues(alpha: 0.8),
                                 width: 1.0,
                               )
                             : null,

@@ -113,7 +113,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
         'espiritual': 'spa',
       };
       final defaultIcon = defaultIconForAspect[aspecto] ?? 'spa';
-      final tipoSerializado = "${aspecto}|${defaultIcon}";
+      final tipoSerializado = "$aspecto|$defaultIcon";
 
       final nuevoHabito = Habito(
         nextId,
@@ -227,7 +227,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                   },
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
+                      color: Colors.white.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: esSeleccionado ? color : Colors.transparent,
@@ -444,7 +444,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                                             width: 44,
                                             height: 44,
                                             decoration: BoxDecoration(
-                                              color: color.withOpacity(0.12),
+                                              color: color.withValues(alpha: 0.12),
                                               borderRadius: BorderRadius.circular(10),
                                             ),
                                             child: Icon(
@@ -477,7 +477,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                                                     : 'Cada día cuenta para mejorar.',
                                                 style: TextStyle(
                                                   fontSize: 12,
-                                                  color: Colors.white.withOpacity(0.5),
+                                                  color: Colors.white.withValues(alpha: 0.5),
                                                 ),
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
@@ -496,12 +496,12 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                                             decoration: BoxDecoration(
                                               color: habito.completadoHoy
                                                   ? color
-                                                  : Colors.white.withOpacity(0.05),
+                                                  : Colors.white.withValues(alpha: 0.05),
                                               borderRadius: BorderRadius.circular(10),
                                               border: Border.all(
                                                 color: habito.completadoHoy
                                                     ? Colors.transparent
-                                                    : Colors.white.withOpacity(0.15),
+                                                    : Colors.white.withValues(alpha: 0.15),
                                                 width: 1.5,
                                               ),
                                             ),
@@ -509,7 +509,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                                               Icons.check,
                                               color: habito.completadoHoy
                                                   ? Colors.white
-                                                  : Colors.white.withOpacity(0.15),
+                                                  : Colors.white.withValues(alpha: 0.15),
                                               size: 24,
                                             ),
                                           ),
