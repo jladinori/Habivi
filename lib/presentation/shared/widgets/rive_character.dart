@@ -1,30 +1,45 @@
 import 'package:flutter/material.dart';
-import 'package:habivi/domain/enums/character_mood.dart';
 
-/// Placeholder del personaje. Sustituir por animación Rive en fase posterior.
 class RiveCharacter extends StatelessWidget {
-  const RiveCharacter({super.key, required this.mood});
+  final int energy;
 
-  final CharacterMood mood;
+  const RiveCharacter({super.key, required this.energy});
 
   @override
   Widget build(BuildContext context) {
-    final icon = switch (mood) {
-      CharacterMood.feliz => Icons.sentiment_very_satisfied,
-      CharacterMood.neutral => Icons.sentiment_neutral,
-      CharacterMood.triste => Icons.sentiment_dissatisfied,
-    };
+    const feliz = _MoodData(Icons.sentiment_very_satisfied, 'Feliz', Colors.green);
+    const neutral = _MoodData(Icons.sentiment_neutral, 'Neutral', Colors.orange);
+    const triste = _MoodData(Icons.sentiment_dissatisfied, 'Triste', Colors.red);
+    final mood = energy > 60 ? feliz : energy > 30 ? neutral : triste;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 120, color: Theme.of(context).colorScheme.primary),
-        const SizedBox(height: 12),
-        Text(
-          mood.label,
-          style: Theme.of(context).textTheme.headlineSmall,
-        ),
-      ],
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 500),
+      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 32),
+      decoration: BoxDecoration(
+        color: mood.color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(mood.icon, size: 100, color: mood.color),
+          const SizedBox(height: 8),
+          Text(
+            mood.label,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: mood.color,
+                ),
+          ),
+        ],
+      ),
     );
   }
+}
+
+class _MoodData {
+  final IconData icon;
+  final String label;
+  final Color color;
+  const _MoodData(this.icon, this.label, this.color);
 }

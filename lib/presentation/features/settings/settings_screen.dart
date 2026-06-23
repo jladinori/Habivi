@@ -204,7 +204,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Text(
               'Habivi v1.0.0',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.white.withOpacity(0.3),
+                    color: Colors.white.withValues(alpha: 0.3),
                   ),
             ),
           ),
