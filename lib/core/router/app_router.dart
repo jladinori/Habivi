@@ -90,20 +90,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/settings',
-                pageBuilder: (context, state) => _slideTransition(context, state, const SettingsScreen()),
-                routes: [
-                  GoRoute(
-                    path: 'notes',
-                    parentNavigatorKey: _rootNavigatorKey,
-                    pageBuilder: (context, state) => _slideTransition(context, state, const NotesScreen()),
-                  ),
-                ],
-              ),
-            ],
+        ],
+      ),
+      // Settings accesible via push (no es pestaña)
+      GoRoute(
+        path: '/settings',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => _slideTransition(context, state, const SettingsScreen()),
+        routes: [
+          GoRoute(
+            path: 'notes',
+            parentNavigatorKey: _rootNavigatorKey,
+            pageBuilder: (context, state) => _slideTransition(context, state, const NotesScreen()),
           ),
         ],
       ),
