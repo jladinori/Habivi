@@ -70,6 +70,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
+                path: '/tasks',
+                pageBuilder: (context, state) => _slideTransition(context, state, const TaskScreen()),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
                 path: '/productivity',
                 pageBuilder: (context, state) => _slideTransition(context, state, const ProductivityScreen()),
                 routes: [
@@ -79,14 +87,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     pageBuilder: (context, state) => _slideTransition(context, state, const PomodoroScreen()),
                   ),
                 ],
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/tasks',
-                pageBuilder: (context, state) => _slideTransition(context, state, const TaskScreen()),
               ),
             ],
           ),
