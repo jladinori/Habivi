@@ -103,10 +103,17 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
     return Icons.spa;
   }
 
-  Future<void> _agregarHabitoDialogo(String nombre, String descripcion, String aspecto) async {
+  Future<void> _agregarHabitoDialogo(
+    String nombre,
+    String descripcion,
+    String aspecto,
+    int vecesPorSemana,
+  ) async {
     try {
-      final nextId = _habitos.isEmpty ? 0 : _habitos.map((h) => h.idHabito).reduce((a, b) => a > b ? a : b) + 1;
-      
+      final nextId = _habitos.isEmpty
+          ? 0
+          : _habitos.map((h) => h.idHabito).reduce((a, b) => a > b ? a : b) + 1;
+
       final defaultIconForAspect = {
         'físico': 'run',
         'mental': 'book',
@@ -123,6 +130,8 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
         completadoHoy: false,
         fechaUltimoCompletado: '',
         fechasCompletadas: [],
+        vecesPorSemana: vecesPorSemana,
+        fechaCreacion: _obtenerFechaHoy(),
       );
 
       await _repository.add(nuevoHabito);
@@ -194,9 +203,85 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
     }
   }
 
+  void _mostrarDialogoEditarFrecuencia(int index, Habito habito) {
+    int frecuencia = habito.safeVecesPorSemana;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              title: const Text('Editar frecuencia'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('¿Cuántas veces por semana debería repetirse?'),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        onPressed: () {
+                          if (frecuencia > 1) {
+                            setStateDialog(() {
+                              frecuencia--;
+                            });
+                          }
+                        },
+                        icon: const Icon(Icons.remove),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        '$frecuencia',
+                        style: const TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(width: 12),
+                      IconButton(
+                        onPressed: () {
+                          if (frecuencia < 7) {
+                            setStateDialog(() {
+                              frecuencia++;
+                            });
+                          }
+                        },
+                        icon: const Icon(Icons.add),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancelar'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    final dialogContext = context;
+                    habito.vecesPorSemana = frecuencia;
+                    await _repository.updateAt(index, habito);
+                    if (!dialogContext.mounted) return;
+                    setState(() {
+                      _habitos[index] = habito;
+                    });
+                    Navigator.of(dialogContext).pop();
+                  },
+                  child: const Text('Guardar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   void _mostrarSelectorIconos(int index, Habito habito) {
     final color = _habitColors[habito.idHabito % _habitColors.length];
-    final listIconos = _iconosPorAspecto[habito.aspecto] ?? _iconosPorAspecto['físico']!;
+    final listIconos =
+        _iconosPorAspecto[habito.aspecto] ?? _iconosPorAspecto['físico']!;
 
     showDialog(
       context: context,
@@ -220,10 +305,12 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
 
                 return InkWell(
                   onTap: () async {
+                    final dialogContext = context;
                     habito.iconoKey = key;
                     await _repository.updateAt(index, habito);
+                    if (!dialogContext.mounted) return;
                     setState(() {});
-                    Navigator.pop(context);
+                    Navigator.of(dialogContext).pop();
                   },
                   child: Container(
                     decoration: BoxDecoration(
@@ -255,6 +342,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
     final nameController = TextEditingController();
     final descController = TextEditingController();
     String seleccionadoAspecto = 'físico';
+    int vecesPorSemanaSeleccionadas = 1;
 
     showDialog(
       context: context,
@@ -332,6 +420,55 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 16),
+                    const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Frecuencia semanal:',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '$vecesPorSemanaSeleccionadas veces por semana',
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                        Row(
+                          children: [
+                            IconButton(
+                              onPressed: () {
+                                if (vecesPorSemanaSeleccionadas > 1) {
+                                  setStateDialog(() {
+                                    vecesPorSemanaSeleccionadas--;
+                                  });
+                                }
+                              },
+                              icon: const Icon(Icons.remove),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '$vecesPorSemanaSeleccionadas',
+                              style: const TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              onPressed: () {
+                                if (vecesPorSemanaSeleccionadas < 7) {
+                                  setStateDialog(() {
+                                    vecesPorSemanaSeleccionadas++;
+                                  });
+                                }
+                              },
+                              icon: const Icon(Icons.add),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -354,6 +491,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                       nombre,
                       descController.text.trim(),
                       seleccionadoAspecto,
+                      vecesPorSemanaSeleccionadas,
                     );
                   },
                   child: const Text('Agregar'),
@@ -393,11 +531,13 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                       ),
                     )
                   : ListView.builder(
-                      padding: const EdgeInsets.only(left: 16, right: 16, bottom: 80),
+                      padding: const EdgeInsets.only(
+                          left: 16, right: 16, bottom: 80),
                       itemCount: _habitos.length,
                       itemBuilder: (context, index) {
                         final habito = _habitos[index];
-                        final color = _habitColors[habito.idHabito % _habitColors.length];
+                        final color =
+                            _habitColors[habito.idHabito % _habitColors.length];
                         final icon = _getIconForHabit(habito);
 
                         return Padding(
@@ -439,13 +579,16 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                                       children: [
                                         // Icono decorado con fondo opaco y selector interactivo al pulsar
                                         GestureDetector(
-                                          onTap: () => _mostrarSelectorIconos(index, habito),
+                                          onTap: () => _mostrarSelectorIconos(
+                                              index, habito),
                                           child: Container(
                                             width: 44,
                                             height: 44,
                                             decoration: BoxDecoration(
-                                              color: color.withValues(alpha: 0.12),
-                                              borderRadius: BorderRadius.circular(10),
+                                              color:
+                                                  color.withValues(alpha: 0.12),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
                                             ),
                                             child: Icon(
                                               icon,
@@ -458,7 +601,8 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                                         // Título y descripción (atributo)
                                         Expanded(
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               Text(
                                                 habito.nombreHabito,
@@ -477,10 +621,20 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                                                     : 'Cada día cuenta para mejorar.',
                                                 style: TextStyle(
                                                   fontSize: 12,
-                                                  color: Colors.white.withValues(alpha: 0.5),
+                                                  color: Colors.white
+                                                      .withValues(alpha: 0.5),
                                                 ),
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
+                                              ),
+                                              const SizedBox(height: 6),
+                                              Text(
+                                                'Repite ${habito.safeVecesPorSemana} veces/semana',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: Colors.white
+                                                      .withValues(alpha: 0.55),
+                                                ),
                                               ),
                                             ],
                                           ),
@@ -490,18 +644,22 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                                         GestureDetector(
                                           onTap: () => _marcarCompletado(index),
                                           child: AnimatedContainer(
-                                            duration: const Duration(milliseconds: 200),
+                                            duration: const Duration(
+                                                milliseconds: 200),
                                             width: 44,
                                             height: 44,
                                             decoration: BoxDecoration(
                                               color: habito.completadoHoy
                                                   ? color
-                                                  : Colors.white.withValues(alpha: 0.05),
-                                              borderRadius: BorderRadius.circular(10),
+                                                  : Colors.white
+                                                      .withValues(alpha: 0.05),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
                                               border: Border.all(
                                                 color: habito.completadoHoy
                                                     ? Colors.transparent
-                                                    : Colors.white.withValues(alpha: 0.15),
+                                                    : Colors.white.withValues(
+                                                        alpha: 0.15),
                                                 width: 1.5,
                                               ),
                                             ),
@@ -509,7 +667,8 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                                               Icons.check,
                                               color: habito.completadoHoy
                                                   ? Colors.white
-                                                  : Colors.white.withValues(alpha: 0.15),
+                                                  : Colors.white
+                                                      .withValues(alpha: 0.15),
                                               size: 24,
                                             ),
                                           ),
@@ -517,9 +676,39 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                                       ],
                                     ),
                                     const SizedBox(height: 16),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'Frecuencia: ${habito.safeVecesPorSemana}/sem',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.white
+                                                .withValues(alpha: 0.55),
+                                          ),
+                                        ),
+                                        TextButton.icon(
+                                          onPressed: () =>
+                                              _mostrarDialogoEditarFrecuencia(
+                                                  index, habito),
+                                          icon:
+                                              const Icon(Icons.edit, size: 16),
+                                          label: const Text('Editar'),
+                                          style: TextButton.styleFrom(
+                                            foregroundColor: Colors.white
+                                                .withValues(alpha: 0.75),
+                                            visualDensity:
+                                                VisualDensity.compact,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 16),
                                     // Tablero de contribuciones del año alineado por semanas
                                     HabitContributionBoard(
-                                      fechasCompletadas: habito.safeFechasCompletadas,
+                                      fechasCompletadas:
+                                          habito.safeFechasCompletadas,
                                       baseColor: color,
                                     ),
                                   ],

@@ -24,13 +24,15 @@ class HabitoAdapter extends TypeAdapter<Habito> {
       completadoHoy: fields[4] as bool,
       fechaUltimoCompletado: fields[5] as String,
       fechasCompletadas: (fields[6] as List?)?.cast<String>(),
+      vecesPorSemana: fields[7] as int?,
+      fechaCreacion: fields[8] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Habito obj) {
     writer
-      ..writeByte(7)
+      ..writeByte(9)
       ..writeByte(0)
       ..write(obj.idHabito)
       ..writeByte(1)
@@ -44,7 +46,11 @@ class HabitoAdapter extends TypeAdapter<Habito> {
       ..writeByte(5)
       ..write(obj.fechaUltimoCompletado)
       ..writeByte(6)
-      ..write(obj.fechasCompletadas);
+      ..write(obj.fechasCompletadas)
+      ..writeByte(7)
+      ..write(obj.vecesPorSemana)
+      ..writeByte(8)
+      ..write(obj.fechaCreacion);
   }
 
   @override

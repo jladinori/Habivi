@@ -1,11 +1,9 @@
-
 import 'package:hive/hive.dart';
 
 part 'habito.g.dart';
 
 @HiveType(typeId: 2)
 class Habito {
-
   @HiveField(0)
   int idHabito;
 
@@ -27,7 +25,30 @@ class Habito {
   @HiveField(6)
   List<String>? fechasCompletadas;
 
+  @HiveField(7)
+  int? vecesPorSemana;
+
+  @HiveField(8)
+  String? fechaCreacion;
+
   List<String> get safeFechasCompletadas => fechasCompletadas ?? [];
+
+  int get safeVecesPorSemana =>
+      (vecesPorSemana != null && vecesPorSemana! > 0) ? vecesPorSemana! : 1;
+
+  String get safeFechaCreacion {
+    if (fechaCreacion != null && fechaCreacion!.isNotEmpty) {
+      return fechaCreacion!;
+    }
+    if (fechaUltimoCompletado.isNotEmpty) {
+      return fechaUltimoCompletado;
+    }
+    return _formatDate(DateTime.now());
+  }
+
+  static String _formatDate(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
 
   String get aspecto {
     if (tipo.contains('|')) {
@@ -62,5 +83,7 @@ class Habito {
     this.completadoHoy = false,
     this.fechaUltimoCompletado = '',
     List<String>? fechasCompletadas,
+    this.vecesPorSemana,
+    this.fechaCreacion,
   }) : fechasCompletadas = fechasCompletadas ?? [];
 }
