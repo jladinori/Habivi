@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:video_player/video_player.dart';
+import 'package:habivi/data/repositories/user_repository.dart';
 import 'package:habivi/domain/services/habit_mood_service.dart';
 import 'package:habivi/presentation/providers/mood_provider.dart';
 
@@ -16,6 +17,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   VideoPlayerController? _videoController;
   Future<void>? _initializeVideoFuture;
   String _currentVideoAsset = '';
+  String _lastSavedMoodState = '';
 
   @override
   void dispose() {
@@ -27,7 +29,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (_currentVideoAsset == asset && _videoController != null) {
       return;
     }
-
+ 
     _videoController?.dispose();
     _currentVideoAsset = asset;
     _videoController = VideoPlayerController.asset(asset);
@@ -37,10 +39,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ..setVolume(0);
       return _videoController!.play();
     });
-
+ 
     if (mounted) {
       setState(() {});
     }
+  }
+
+  Future<void> _saveMoodState(double moodPercentage) async {
+    final moodState = HabitMoodService.getMoodState(moodPercentage);
+    if (moodState == _lastSavedMoodState) return;
+    _lastSavedMoodState = moodState;
+
+    final userRepo = UserRepository();
+    final usuarios = await userRepo.readAll();
+    if (usuarios.isEmpty) return;
+
+    final firstKey = usuarios.keys.first;
+    final usuario = usuarios.values.first;
+    usuario.estadoPersonaje = moodState;
+    await userRepo.updateAt(firstKey, usuario);
   }
 
   @override
@@ -48,6 +65,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // Watch el provider de mood para que se recargue automáticamente
     final moodAsync = ref.watch(moodPercentageProvider);
 
+    // ignore: deprecated_member_use
     return WillPopScope(
       onWillPop: () async => true,
       child: Scaffold(
@@ -88,6 +106,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         _setVideoForMood(videoAsset);
                       });
                     }
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      _saveMoodState(moodPercentage);
+                    });
 
                     if (_videoController == null || _initializeVideoFuture == null) {
                       return const Center(child: CircularProgressIndicator());

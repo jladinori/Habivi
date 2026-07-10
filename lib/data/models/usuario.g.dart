@@ -21,13 +21,17 @@ class UsuarioAdapter extends TypeAdapter<Usuario> {
       nombre: fields[1] as String,
       apellido: fields[2] as String,
       energia: fields[3] as int,
+      energiaMax: fields[4] as int? ?? 100,
+      puntosProductividad: fields[5] as int? ?? 0,
+      estadoPersonaje: fields[6] as String? ?? 'neutral',
+      fechaInicio: fields[7] as String? ?? DateTime.now().toIso8601String(),
     );
   }
 
   @override
   void write(BinaryWriter writer, Usuario obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.idUsuario)
       ..writeByte(1)
@@ -35,7 +39,15 @@ class UsuarioAdapter extends TypeAdapter<Usuario> {
       ..writeByte(2)
       ..write(obj.apellido)
       ..writeByte(3)
-      ..write(obj.energia);
+      ..write(obj.energia)
+      ..writeByte(4)
+      ..write(obj.energiaMax)
+      ..writeByte(5)
+      ..write(obj.puntosProductividad)
+      ..writeByte(6)
+      ..write(obj.estadoPersonaje)
+      ..writeByte(7)
+      ..write(obj.fechaInicio);
   }
 
   @override

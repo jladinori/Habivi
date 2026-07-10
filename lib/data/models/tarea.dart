@@ -20,20 +20,34 @@ class Tarea {
   @HiveField(3)
   String metadata;
 
+  @HiveField(4)
+  String fecha;
+
+  @HiveField(5)
+  String notas;
+
+  @HiveField(6)
+  bool completada;
+
   Tarea(
     this.idTarea,
     this.nombreTarea,
     this.puntaje, {
     this.metadata = '',
+    this.fecha = '',
+    this.notas = '',
+    this.completada = false,
   });
 
   // Helpers para extraer datos
-  String get fecha {
+  String get fechaFormateada {
+    if (fecha.isNotEmpty) return fecha;
     final parts = metadata.split('|');
     return parts.length > 1 ? parts[1] : '';
   }
 
-  String get notas {
+  String get notasFormateadas {
+    if (notas.isNotEmpty) return notas;
     final parts = metadata.split('|');
     return parts.length > 2 ? parts[2] : '';
   }

@@ -5,6 +5,7 @@ import 'package:habivi/presentation/features/task/task_screen.dart';
 import 'package:habivi/presentation/features/habits/habit_detail_screen.dart';
 import 'package:habivi/presentation/features/habits/habits_list_screen.dart';
 import 'package:habivi/presentation/features/home/home_screen.dart';
+import 'package:habivi/presentation/features/auth/login_screen.dart';
 import 'package:habivi/presentation/features/notes/notes_screen.dart';
 import 'package:habivi/presentation/features/settings/settings_screen.dart';
 import 'package:habivi/presentation/features/productivity/productivity_screen.dart';
@@ -102,6 +103,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: 'notes',
             parentNavigatorKey: _rootNavigatorKey,
             pageBuilder: (context, state) => _slideTransition(context, state, const NotesScreen()),
+          ),
+          GoRoute(
+            path: 'login',
+            parentNavigatorKey: _rootNavigatorKey,
+            pageBuilder: (context, state) => _slideTransition(context, state, const LoginScreen()),
           ),
         ],
       ),

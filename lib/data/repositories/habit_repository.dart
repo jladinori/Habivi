@@ -28,9 +28,21 @@ class HabitRepository {
     await b.flush();
   }
 
+  Future<void> delete(dynamic key) async {
+    final b = await box;
+    await b.delete(key);
+    await b.flush();
+  }
+
   Future<void> updateAt(int index, Habito habito) async {
     final b = await box;
     await b.putAt(index, habito);
+    await b.flush();
+  }
+
+  Future<void> update(dynamic key, Habito habito) async {
+    final b = await box;
+    await b.put(key, habito);
     await b.flush();
   }
 

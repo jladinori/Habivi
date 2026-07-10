@@ -47,7 +47,7 @@ class HabitsListScreen extends ConsumerStatefulWidget {
 
 class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
   late HabitRepository _repository;
-  List<Habito> _habitos = [];
+  List<MapEntry<dynamic, Habito>> _habitos = [];
 
   @override
   void initState() {
@@ -60,10 +60,9 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
     try {
       final habitosMap = await _repository.readAll();
       setState(() {
-        _habitos = habitosMap.values.toList();
-        // Sincronizar y resetear por día si es necesario
-        _verificarResetearPorDia();
+        _habitos = habitosMap.entries.toList();
       });
+      await _verificarResetearPorDia();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -73,19 +72,21 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
     }
   }
 
-  void _verificarResetearPorDia() {
+  Future<void> _verificarResetearPorDia() async {
     final hoy = _obtenerFechaHoy();
     bool cambio = false;
     for (int i = 0; i < _habitos.length; i++) {
-      final habito = _habitos[i];
+      final entry = _habitos[i];
+      final habito = entry.value;
       final completadoEnBD = habito.safeFechasCompletadas.contains(hoy);
       if (habito.completadoHoy != completadoEnBD) {
         habito.completadoHoy = completadoEnBD;
-        _repository.updateAt(i, habito);
+        await _repository.update(entry.key, habito);
+        _habitos[i] = MapEntry(entry.key, habito);
         cambio = true;
       }
     }
-    if (cambio) {
+    if (cambio && mounted) {
       setState(() {});
     }
   }
@@ -112,7 +113,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
     try {
       final nextId = _habitos.isEmpty
           ? 0
-          : _habitos.map((h) => h.idHabito).reduce((a, b) => a > b ? a : b) + 1;
+          : _habitos.map((h) => h.value.idHabito).reduce((a, b) => a > b ? a : b) + 1;
 
       final defaultIconForAspect = {
         'físico': 'run',
@@ -147,7 +148,8 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
 
   Future<void> _marcarCompletado(int index) async {
     try {
-      final habito = _habitos[index];
+      final entry = _habitos[index];
+      final habito = entry.value;
       final hoy = _obtenerFechaHoy();
       habito.completadoHoy = !habito.completadoHoy;
       habito.fechaUltimoCompletado = hoy;
@@ -163,9 +165,9 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
       habito.fechasCompletadas = list;
 
       // Guardar el cambio en la BD local
-      await _repository.updateAt(index, habito);
+      await _repository.update(entry.key, habito);
       setState(() {
-        _habitos[index] = habito;
+        _habitos[index] = MapEntry(entry.key, habito);
       });
 
       if (mounted && habito.completadoHoy) {
@@ -187,7 +189,8 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
 
   Future<void> _deleteHabito(int index) async {
     try {
-      await _repository.deleteAt(index);
+      final key = _habitos[index].key;
+      await _repository.delete(key);
       await _loadHabitos();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -203,7 +206,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
     }
   }
 
-  void _mostrarDialogoEditarFrecuencia(int index, Habito habito) {
+  void _mostrarDialogoEditarFrecuencia(int index, dynamic key, Habito habito) {
     int frecuencia = habito.safeVecesPorSemana;
 
     showDialog(
@@ -261,10 +264,10 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                   onPressed: () async {
                     final dialogContext = context;
                     habito.vecesPorSemana = frecuencia;
-                    await _repository.updateAt(index, habito);
+                    await _repository.update(key, habito);
                     if (!dialogContext.mounted) return;
                     setState(() {
-                      _habitos[index] = habito;
+                      _habitos[index] = MapEntry(key, habito);
                     });
                     Navigator.of(dialogContext).pop();
                   },
@@ -278,7 +281,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
     );
   }
 
-  void _mostrarSelectorIconos(int index, Habito habito) {
+  void _mostrarSelectorIconos(int index, dynamic habitKey, Habito habito) {
     final color = _habitColors[habito.idHabito % _habitColors.length];
     final listIconos =
         _iconosPorAspecto[habito.aspecto] ?? _iconosPorAspecto['físico']!;
@@ -307,13 +310,13 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                   onTap: () async {
                     final dialogContext = context;
                     habito.iconoKey = key;
-                    await _repository.updateAt(index, habito);
+                    await _repository.update(habitKey, habito);
                     if (!dialogContext.mounted) return;
-                    setState(() {});
+                    setState(() {
+                      _habitos[index] = MapEntry(habitKey, habito);
+                    });
                     Navigator.of(dialogContext).pop();
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
+                  },                  child: Container(                    decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
@@ -535,7 +538,8 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                           left: 16, right: 16, bottom: 80),
                       itemCount: _habitos.length,
                       itemBuilder: (context, index) {
-                        final habito = _habitos[index];
+                        final entry = _habitos[index];
+                        final habito = entry.value;
                         final color =
                             _habitColors[habito.idHabito % _habitColors.length];
                         final icon = _getIconForHabit(habito);
@@ -580,7 +584,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                                         // Icono decorado con fondo opaco y selector interactivo al pulsar
                                         GestureDetector(
                                           onTap: () => _mostrarSelectorIconos(
-                                              index, habito),
+                                              index, entry.key, habito),
                                           child: Container(
                                             width: 44,
                                             height: 44,
@@ -691,7 +695,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                                         TextButton.icon(
                                           onPressed: () =>
                                               _mostrarDialogoEditarFrecuencia(
-                                                  index, habito),
+                                                  index, entry.key, habito),
                                           icon:
                                               const Icon(Icons.edit, size: 16),
                                           label: const Text('Editar'),

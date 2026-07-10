@@ -67,6 +67,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           nombre: nombre,
           apellido: apellido,
           energia: 100,
+          energiaMax: 100,
+          puntosProductividad: 0,
+          estadoPersonaje: 'neutral',
+          fechaInicio: DateTime.now().toIso8601String(),
         );
         await _userRepo.add(nuevoUsuario);
         _usuario = nuevoUsuario;
@@ -146,6 +150,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ],
               ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Card(
+            child: ListTile(
+              leading: Icon(
+                Icons.login,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              title: const Text('Iniciar sesión'),
+              subtitle: const Text('Opcional, disponible solo en configuración'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/settings/login'),
             ),
           ),
           const SizedBox(height: 12),

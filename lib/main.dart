@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:habivi/app.dart';
-import 'package:habivi/core/hive/hive_initializer.dart';
+import 'package:habivi/data/database/app_database.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await HiveInitializer.init();
+  await AppDatabase.initialize();
 
   runApp(
     const ProviderScope(
@@ -43,7 +43,7 @@ class _AppLifecycleWrapperState extends State<_AppLifecycleWrapper>
   Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached) {
-      await HiveInitializer.closeAll();
+      await AppDatabase.closeAll();
     }
   }
 

@@ -51,18 +51,16 @@ class _TaskScreenState extends State<TaskScreen> {
 
   Future<void> _agregarPendiente(String nombre, String fecha, String notas) async {
     try {
-      final metadata = Tarea.crearMetadata(fecha, notas);
       final nuevaTarea = Tarea(
         DateTime.now().millisecondsSinceEpoch,
         nombre,
         0,
-        metadata: metadata,
+        fecha: fecha,
+        notas: notas,
+        completada: false,
       );
       await _repository.add(nuevaTarea);
-      
-      // Recarga la lista sin mostrar pantalla blanca
       await _cargarTareas();
-      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('✓ Pendiente agregado')),
@@ -80,11 +78,15 @@ class _TaskScreenState extends State<TaskScreen> {
   Future<void> _completarPendiente(dynamic key) async {
     try {
       final box = await _repository.box;
-      await box.delete(key);
+      final tarea = box.get(key);
+      if (tarea != null) {
+        tarea.completada = !tarea.completada;
+        await box.put(key, tarea);
+      }
       await _cargarTareas();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✓ Completado')),
+          SnackBar(content: Text(tarea?.completada == true ? '✓ Completado' : 'Pendiente sin completar')),
         );
       }
     } catch (e) {
@@ -258,10 +260,15 @@ class _TaskScreenState extends State<TaskScreen> {
                               child: Card(
                                 child: ListTile(
                                   leading: Checkbox(
-                                    value: false,
+                                    value: tarea.completada,
                                     onChanged: (_) => _completarPendiente(key),
                                   ),
-                                  title: Text(tarea.nombreTarea),
+                                  title: Text(
+                                    tarea.nombreTarea,
+                                    style: tarea.completada
+                                        ? const TextStyle(decoration: TextDecoration.lineThrough)
+                                        : null,
+                                  ),
                                   subtitle: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
