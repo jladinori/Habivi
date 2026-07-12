@@ -4,6 +4,7 @@ import 'package:habivi/data/models/cuenta.dart';
 import 'package:habivi/data/models/evento.dart';
 import 'package:habivi/data/models/habito.dart';
 import 'package:habivi/data/models/nota.dart';
+import 'package:habivi/data/models/racha.dart';
 import 'package:habivi/data/models/registro_habito.dart';
 import 'package:habivi/data/models/sesion_estudio.dart';
 import 'package:habivi/data/models/sesion_pomodoro.dart';
@@ -58,6 +59,9 @@ class HiveInitializer {
     }
     if (!Hive.isAdapterRegistered(9)) {
       Hive.registerAdapter(SesionEstudioAdapter());
+    }
+    if (!Hive.isAdapterRegistered(10)) {
+      Hive.registerAdapter(RachaAdapter());
     }
   }
 }
