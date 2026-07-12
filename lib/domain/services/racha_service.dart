@@ -20,12 +20,6 @@ class RachaService {
       print('   currentRacha.cantidad: ${currentRacha.cantidad}');
     }
 
-    // Si ya se registró hoy, no hacer cambios
-    if (Racha.isSameDay(lastCompleted, today)) {
-      if (kDebugMode) print('   ✓ Ya se registró hoy, sin cambios');
-      return currentRacha;
-    }
-
     if (completedDailyHabitToday) {
       // Completó un hábito hoy
       if (lastCompleted.isEmpty) {
@@ -33,6 +27,12 @@ class RachaService {
         if (kDebugMode) print('   ✓ Primera racha diaria, cantidad = 1');
         return currentRacha.copyWith(
           cantidad: 1,
+          fechaUltimoCompletado: today,
+        );
+      } else if (Racha.isSameDay(lastCompleted, today)) {
+        // Ya completó hoy, mantener la racha pero actualizar fecha
+        if (kDebugMode) print('   ✓ Ya completó hoy, mantiene cantidad = ${currentRacha.cantidad}');
+        return currentRacha.copyWith(
           fechaUltimoCompletado: today,
         );
       } else if (Racha.isNextDay(lastCompleted, today)) {
@@ -53,6 +53,14 @@ class RachaService {
     } else {
       // No completó ningún hábito hoy
       if (kDebugMode) print('   ℹ No hay hábito completado hoy');
+      
+      if (Racha.isSameDay(lastCompleted, today)) {
+        // Hoy ya se había registrado pero ahora no hay hábitos completados
+        // Mantener el estado actual
+        if (kDebugMode) print('   ℹ Mantiene estado actual de hoy');
+        return currentRacha;
+      }
+      
       // Si ayer fue el último día, se pierde la racha
       if (Racha.isNextDay(lastCompleted, today)) {
         if (kDebugMode) print('   ⚠ Se pierde racha diaria');
