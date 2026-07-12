@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:habivi/data/models/racha.dart';
 import 'package:habivi/data/models/habito.dart';
 
@@ -12,39 +11,29 @@ class RachaService {
     final today = Racha.getTodayFormatted();
     final lastCompleted = currentRacha.fechaUltimoCompletado;
 
-    if (kDebugMode) {
-      print('🔍 [RachaService] updateDailyRacha:');
-      print('   today: $today');
-      print('   lastCompleted: $lastCompleted');
-      print('   completedDailyHabitToday: $completedDailyHabitToday');
-      print('   currentRacha.cantidad: ${currentRacha.cantidad}');
-    }
-
     if (completedDailyHabitToday) {
       // Completó un hábito hoy
       if (lastCompleted.isEmpty) {
-        // Primera vez
-        if (kDebugMode) print('   ✓ Primera racha diaria, cantidad = 1');
+        // Primera racha
         return currentRacha.copyWith(
           cantidad: 1,
           fechaUltimoCompletado: today,
         );
       } else if (Racha.isSameDay(lastCompleted, today)) {
-        // Ya completó hoy, mantener la racha pero actualizar fecha
-        if (kDebugMode) print('   ✓ Ya completó hoy, mantiene cantidad = ${currentRacha.cantidad}');
+        // Ya completó hoy, la racha ya estaba contada
+        // Incrementar porque es un nuevo completado hoy
         return currentRacha.copyWith(
+          cantidad: currentRacha.cantidad + 1,
           fechaUltimoCompletado: today,
         );
       } else if (Racha.isNextDay(lastCompleted, today)) {
-        // Continúa la racha
-        if (kDebugMode) print('   ✓ Continúa racha diaria, cantidad = ${currentRacha.cantidad + 1}');
+        // Continúa la racha de ayer
         return currentRacha.copyWith(
           cantidad: currentRacha.cantidad + 1,
           fechaUltimoCompletado: today,
         );
       } else {
-        // Se rompió la racha (no fue el día siguiente)
-        if (kDebugMode) print('   ⚠ Se rompió racha, reinicia en 1');
+        // Se rompió la racha (pasaron días)
         return currentRacha.copyWith(
           cantidad: 1,
           fechaUltimoCompletado: today,
@@ -52,25 +41,19 @@ class RachaService {
       }
     } else {
       // No completó ningún hábito hoy
-      if (kDebugMode) print('   ℹ No hay hábito completado hoy');
-      
       if (Racha.isSameDay(lastCompleted, today)) {
-        // Hoy ya se había registrado pero ahora no hay hábitos completados
-        // Mantener el estado actual
-        if (kDebugMode) print('   ℹ Mantiene estado actual de hoy');
+        // Hoy ya se había registrado pero no hay hábitos
         return currentRacha;
       }
       
       // Si ayer fue el último día, se pierde la racha
       if (Racha.isNextDay(lastCompleted, today)) {
-        if (kDebugMode) print('   ⚠ Se pierde racha diaria');
         return currentRacha.copyWith(
           cantidad: 0,
           fechaUltimoCompletado: today,
         );
-      } else if (!Racha.isSameDay(lastCompleted, today)) {
-        // Ya pasó más de un día, la racha ya estaba perdida
-        if (kDebugMode) print('   ⚠ Racha ya estaba perdida');
+      } else if (lastCompleted.isNotEmpty && !Racha.isSameDay(lastCompleted, today)) {
+        // Pasó más de un día sin completar
         return currentRacha.copyWith(
           cantidad: 0,
           fechaUltimoCompletado: today,
@@ -92,19 +75,10 @@ class RachaService {
     final fechaInicioPeriodoRecuperacion =
         currentRacha.fechaInicioPeriodoRecuperacion;
 
-    if (kDebugMode) {
-      print('🔍 [RachaService] updateWeeklyRacha:');
-      print('   today: $today');
-      print('   lastCompleted: $lastCompleted');
-      print('   completedWeeklyHabitThisWeek: $completedWeeklyHabitThisWeek');
-      print('   enRiesgo: $enRiesgo');
-    }
-
     // Caso 1: Ya se completó en la semana actual
     if (lastCompleted.isNotEmpty && Racha.isSameWeek(lastCompleted, today)) {
       if (enRiesgo) {
         // Se recuperó la racha
-        if (kDebugMode) print('   ✓ Se recuperó racha semanal');
         return currentRacha.copyWith(
           enRiesgo: false,
           fechaInicioPeriodoRecuperacion: '',
@@ -112,7 +86,6 @@ class RachaService {
         );
       }
       // Ya estaba en racha y se completó de nuevo (mantener)
-      if (kDebugMode) print('   ✓ Ya estaba en racha');
       return currentRacha.copyWith(
         fechaUltimoCompletado: today,
       );
@@ -125,7 +98,6 @@ class RachaService {
 
       if (diasDesdeInicio >= 8) {
         // Pasó el período de recuperación (8 días), se pierde la racha
-        if (kDebugMode) print('   ⚠ Pasó período de recuperación, se pierde');
         return currentRacha.copyWith(
           cantidad: 0,
           enRiesgo: false,
@@ -134,7 +106,6 @@ class RachaService {
         );
       } else if (completedWeeklyHabitThisWeek) {
         // Se recuperó en el período de gracia
-        if (kDebugMode) print('   ✓ Se recuperó en período de gracia');
         return currentRacha.copyWith(
           enRiesgo: false,
           fechaInicioPeriodoRecuperacion: '',
@@ -142,7 +113,6 @@ class RachaService {
         );
       }
       // Sigue en período de recuperación sin completar
-      if (kDebugMode) print('   ℹ Sigue en período de recuperación');
       return currentRacha;
     }
 
@@ -150,14 +120,12 @@ class RachaService {
     if (lastCompleted.isNotEmpty && !enRiesgo) {
       if (completedWeeklyHabitThisWeek) {
         // Se completó esta semana, incrementar racha
-        if (kDebugMode) print('   ✓ Incrementa racha semanal a ${currentRacha.cantidad + 1}');
         return currentRacha.copyWith(
           cantidad: currentRacha.cantidad + 1,
           fechaUltimoCompletado: today,
         );
       } else {
         // No se completó esta semana, pasar a estado de riesgo
-        if (kDebugMode) print('   ⚠ Pasa a estado de riesgo');
         final monday = Racha.getMondayOfWeek(DateTime.now());
         return currentRacha.copyWith(
           enRiesgo: true,
@@ -169,14 +137,12 @@ class RachaService {
 
     // Caso 4: Primera racha
     if (lastCompleted.isEmpty && completedWeeklyHabitThisWeek) {
-      if (kDebugMode) print('   ✓ Primera racha semanal');
       return currentRacha.copyWith(
         cantidad: 1,
         fechaUltimoCompletado: today,
       );
     }
 
-    if (kDebugMode) print('   ℹ Sin cambios');
     return currentRacha;
   }
 
@@ -187,32 +153,14 @@ class RachaService {
         .where((h) => h.tipo.contains('diario') || h.safeVecesPorSemana >= 7)
         .toList();
     
-    if (kDebugMode) {
-      print('🔍 [RachaService] hasCompletedDailyHabitToday:');
-      print('   today: $today');
-      print('   total habits: ${habits.length}');
-      print('   daily habits: ${dailyHabits.length}');
-      for (var h in dailyHabits) {
-        print('   - ${h.nombreHabito}: vecesPorSemana=${h.safeVecesPorSemana}, completadoHoy=${h.completadoHoy}, fechasCompletadas=${h.safeFechasCompletadas}');
-      }
-    }
-    
-    final result = dailyHabits.any((h) {
+    return dailyHabits.any((h) {
       // Primero verificar fechasCompletadas (fuente de verdad)
       if (h.safeFechasCompletadas.contains(today)) {
-        if (kDebugMode) print('   ✓ ${h.nombreHabito} está en fechasCompletadas');
         return true;
       }
       // Luego verificar completadoHoy como fallback
-      if (h.completadoHoy) {
-        if (kDebugMode) print('   ✓ ${h.nombreHabito} tiene completadoHoy=true');
-        return true;
-      }
-      return false;
+      return h.completadoHoy;
     });
-    
-    if (kDebugMode) print('   result: $result');
-    return result;
   }
 
   /// Verifica si se completó un hábito semanal esta semana
@@ -224,26 +172,12 @@ class RachaService {
         .where((h) => h.tipo.contains('semanal') || (h.safeVecesPorSemana < 7 && h.safeVecesPorSemana > 0))
         .toList();
 
-    if (kDebugMode) {
-      print('🔍 [RachaService] hasCompletedWeeklyHabitThisWeek:');
-      print('   today: $today');
-      print('   monday: $monday');
-      print('   total habits: ${habits.length}');
-      print('   weekly habits: ${weeklyHabits.length}');
-      for (var h in weeklyHabits) {
-        print('   - ${h.nombreHabito}: vecesPorSemana=${h.safeVecesPorSemana}, fechasCompletadas=${h.safeFechasCompletadas}');
-      }
-    }
-
-    final result = weeklyHabits.any((h) {
+    return weeklyHabits.any((h) {
       // Verificar si hay alguna fecha completada en la semana actual
       return h.safeFechasCompletadas.any((fecha) {
         return fecha.compareTo(monday) >= 0 && fecha.compareTo(today) <= 0;
       });
     });
-    
-    if (kDebugMode) print('   result: $result');
-    return result;
   }
 
   /// Obtiene el color de la racha según su estado
