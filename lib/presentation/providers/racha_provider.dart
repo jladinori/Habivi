@@ -35,7 +35,7 @@ final dailyRachaProvider = FutureProvider<Racha?>((ref) async {
   // Primero inicializar
   await ref.watch(initializeRachasProvider.future);
   
-  // Escuchar cambios en hábitos
+  // Escuchar cambios en hábitos - esto fuerza re-evaluación
   ref.watch(habitsChangeListener);
   
   final repo = ref.watch(rachaRepositoryProvider);
@@ -53,12 +53,8 @@ final dailyRachaProvider = FutureProvider<Racha?>((ref) async {
     completedDailyHabitToday: hasCompleted,
   );
   
-  // Si cambió, guardar
-  if (updatedRacha.cantidad != currentRacha.cantidad ||
-      updatedRacha.fechaUltimoCompletado != currentRacha.fechaUltimoCompletado) {
-    await repo.update(updatedRacha);
-    return updatedRacha;
-  }
+  // SIEMPRE guardar la racha actualizada para asegurar persistencia
+  await repo.update(updatedRacha);
   
   return updatedRacha;
 });
@@ -68,7 +64,7 @@ final weeklyRachaProvider = FutureProvider<Racha?>((ref) async {
   // Primero inicializar
   await ref.watch(initializeRachasProvider.future);
   
-  // Escuchar cambios en hábitos
+  // Escuchar cambios en hábitos - esto fuerza re-evaluación
   ref.watch(habitsChangeListener);
   
   final repo = ref.watch(rachaRepositoryProvider);
@@ -86,13 +82,8 @@ final weeklyRachaProvider = FutureProvider<Racha?>((ref) async {
     completedWeeklyHabitThisWeek: hasCompleted,
   );
   
-  // Si cambió, guardar
-  if (updatedRacha.cantidad != currentRacha.cantidad ||
-      updatedRacha.enRiesgo != currentRacha.enRiesgo ||
-      updatedRacha.fechaUltimoCompletado != currentRacha.fechaUltimoCompletado) {
-    await repo.update(updatedRacha);
-    return updatedRacha;
-  }
+  // SIEMPRE guardar la racha actualizada para asegurar persistencia
+  await repo.update(updatedRacha);
   
   return updatedRacha;
 });
