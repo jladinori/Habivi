@@ -92,7 +92,7 @@ class RachaIndicator extends ConsumerWidget {
     );
   }
 
-  /// Construye un cuadrado de racha con emoji, etiqueta y número
+  /// Construye un cuadrado de racha con emoji, etiqueta y número - COMPLETAMENTE RELLENO DE COLOR
   Widget _buildRachaSquare({
     required String emoji,
     required String label,
@@ -102,12 +102,8 @@ class RachaIndicator extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.35),
+        color: color.withValues(alpha: 0.85), // Relleno completo del color
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withValues(alpha: 0.4),
-          width: 1.5,
-        ),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -120,10 +116,10 @@ class RachaIndicator extends ConsumerWidget {
           const SizedBox(height: 4),
           Text(
             value,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: color,
+              color: Colors.white,
             ),
           ),
           const SizedBox(height: 4),
@@ -131,7 +127,7 @@ class RachaIndicator extends ConsumerWidget {
             label,
             style: TextStyle(
               fontSize: 10,
-              color: Colors.white.withValues(alpha: 0.6),
+              color: Colors.white.withValues(alpha: 0.9),
               fontWeight: FontWeight.w500,
             ),
           ),
