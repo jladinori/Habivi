@@ -144,7 +144,14 @@ class RachaService {
     final today = Racha.getTodayFormatted();
     return habits
         .where((h) => h.tipo.contains('diario') || h.safeVecesPorSemana >= 7)
-        .any((h) => h.completadoHoy || h.safeFechasCompletadas.contains(today));
+        .any((h) {
+          // Primero verificar fechasCompletadas (fuente de verdad)
+          if (h.safeFechasCompletadas.contains(today)) {
+            return true;
+          }
+          // Luego verificar completadoHoy como fallback
+          return h.completadoHoy;
+        });
   }
 
   /// Verifica si se completó un hábito semanal esta semana
@@ -155,6 +162,7 @@ class RachaService {
     return habits
         .where((h) => h.tipo.contains('semanal') || (h.safeVecesPorSemana < 7 && h.safeVecesPorSemana > 0))
         .any((h) {
+          // Verificar si hay alguna fecha completada en la semana actual
           return h.safeFechasCompletadas.any((fecha) {
             return fecha.compareTo(monday) >= 0 && fecha.compareTo(today) <= 0;
           });
