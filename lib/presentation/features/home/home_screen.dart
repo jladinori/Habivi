@@ -5,6 +5,7 @@ import 'package:video_player/video_player.dart';
 import 'package:habivi/data/repositories/user_repository.dart';
 import 'package:habivi/domain/services/habit_mood_service.dart';
 import 'package:habivi/presentation/providers/mood_provider.dart';
+import 'package:habivi/presentation/shared/widgets/racha_widget.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -141,7 +142,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
 
-            // === OVERLAY: Botones/info sobre el personaje ===
+            // === OVERLAY: Barra de energía y rachas ===
             moodAsync.when(
               loading: () => const SizedBox.shrink(),
               error: (_, __) => const SizedBox.shrink(),
@@ -212,6 +213,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
+                        // === RACHAS: Debajo de la barra de energía ===
+                        const RachaIndicator(),
                       ],
                     ),
                   ),
