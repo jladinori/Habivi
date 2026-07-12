@@ -20,12 +20,9 @@ class RachaService {
           fechaUltimoCompletado: today,
         );
       } else if (Racha.isSameDay(lastCompleted, today)) {
-        // Ya completó hoy, la racha ya estaba contada
-        // Incrementar porque es un nuevo completado hoy
-        return currentRacha.copyWith(
-          cantidad: currentRacha.cantidad + 1,
-          fechaUltimoCompletado: today,
-        );
+        // Ya completó hoy, NO incrementar nuevamente
+        // Solo mantener y actualizar fecha
+        return currentRacha;
       } else if (Racha.isNextDay(lastCompleted, today)) {
         // Continúa la racha de ayer
         return currentRacha.copyWith(
@@ -147,10 +144,11 @@ class RachaService {
   }
 
   /// Verifica si se completó un hábito diario hoy
+  /// SOLO cuenta hábitos EXCLUSIVAMENTE diarios (vecesPorSemana >= 7)
   static bool hasCompletedDailyHabitToday(List<Habito> habits) {
     final today = Racha.getTodayFormatted();
     final dailyHabits = habits
-        .where((h) => h.tipo.contains('diario') || h.safeVecesPorSemana >= 7)
+        .where((h) => h.safeVecesPorSemana >= 7) // SOLO hábitos diarios
         .toList();
     
     return dailyHabits.any((h) {
@@ -164,12 +162,13 @@ class RachaService {
   }
 
   /// Verifica si se completó un hábito semanal esta semana
+  /// SOLO cuenta hábitos EXCLUSIVAMENTE semanales (vecesPorSemana < 7)
   static bool hasCompletedWeeklyHabitThisWeek(List<Habito> habits) {
     final today = Racha.getTodayFormatted();
     final monday = Racha.getMondayOfWeek(DateTime.now());
     
     final weeklyHabits = habits
-        .where((h) => h.tipo.contains('semanal') || (h.safeVecesPorSemana < 7 && h.safeVecesPorSemana > 0))
+        .where((h) => h.safeVecesPorSemana < 7 && h.safeVecesPorSemana > 0) // SOLO hábitos semanales
         .toList();
 
     return weeklyHabits.any((h) {
