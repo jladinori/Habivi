@@ -10,4 +10,5 @@ abstract final class HiveBoxNames {
   static const evento = 'eventoBox';
   static const backup = 'backupBox';
   static const sesionEstudio = 'sesionEstudioBox';
+  static const racha = 'rachaBox';
 }
