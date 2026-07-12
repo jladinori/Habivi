@@ -6,6 +6,7 @@ import 'package:habivi/data/models/cuenta.dart';
 import 'package:habivi/data/models/evento.dart';
 import 'package:habivi/data/models/habito.dart';
 import 'package:habivi/data/models/nota.dart';
+import 'package:habivi/data/models/racha.dart';
 import 'package:habivi/data/models/registro_habito.dart';
 import 'package:habivi/data/models/sesion_estudio.dart';
 import 'package:habivi/data/models/sesion_pomodoro.dart';
@@ -21,6 +22,7 @@ import 'package:habivi/data/models/usuario.dart';
 /// - pendientes y su estado de completado
 /// - sesiones de productividad Pomodoro y estudio
 /// - eventos, notas y respaldos
+/// - rachas diarias y semanales
 class AppDatabase {
   AppDatabase._();
 
@@ -41,6 +43,7 @@ class AppDatabase {
       Hive.openBox<Nota>(HiveBoxNames.nota),
       Hive.openBox<Evento>(HiveBoxNames.evento),
       Hive.openBox<Backup>(HiveBoxNames.backup),
+      Hive.openBox<Racha>(HiveBoxNames.racha),
     ]);
   }
 
@@ -54,6 +57,7 @@ class AppDatabase {
   static Future<Box<Nota>> noteBox() => Hive.openBox<Nota>(HiveBoxNames.nota);
   static Future<Box<Evento>> eventBox() => Hive.openBox<Evento>(HiveBoxNames.evento);
   static Future<Box<Backup>> backupBox() => Hive.openBox<Backup>(HiveBoxNames.backup);
+  static Future<Box<Racha>> rachaBox() => Hive.openBox<Racha>(HiveBoxNames.racha);
 
   static Future<void> closeAll() async {
     await Hive.close();
