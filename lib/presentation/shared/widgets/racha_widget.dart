@@ -16,14 +16,17 @@ class RachaIndicator extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // === RACHA SEMANAL (Izquierda) ===
-          Expanded(
+          SizedBox(
+            width: 100,
             child: weeklyRachaAsync.when(
               loading: () => _buildRachaSquare(
+                emoji: '🔥',
                 label: 'Semanas',
                 value: '–',
                 color: Colors.purple,
               ),
               error: (_, __) => _buildRachaSquare(
+                emoji: '🔥',
                 label: 'Semanas',
                 value: '0',
                 color: Colors.purple,
@@ -31,12 +34,14 @@ class RachaIndicator extends ConsumerWidget {
               data: (racha) {
                 if (racha == null) {
                   return _buildRachaSquare(
+                    emoji: '🔥',
                     label: 'Semanas',
                     value: '0',
                     color: Colors.purple,
                   );
                 }
                 return _buildRachaSquare(
+                  emoji: '🔥',
                   label: 'Semanas',
                   value: '${racha.cantidad}',
                   color: racha.enRiesgo ? Colors.grey : Colors.purple,
@@ -44,17 +49,22 @@ class RachaIndicator extends ConsumerWidget {
               },
             ),
           ),
-          const SizedBox(width: 16),
+          
+          // === ESPACIO EN MEDIO ===
+          const Spacer(),
           
           // === RACHA DIARIA (Derecha) ===
-          Expanded(
+          SizedBox(
+            width: 100,
             child: dailyRachaAsync.when(
               loading: () => _buildRachaSquare(
+                emoji: '🔥',
                 label: 'Días',
                 value: '–',
                 color: Colors.red,
               ),
               error: (_, __) => _buildRachaSquare(
+                emoji: '🔥',
                 label: 'Días',
                 value: '0',
                 color: Colors.red,
@@ -62,12 +72,14 @@ class RachaIndicator extends ConsumerWidget {
               data: (racha) {
                 if (racha == null) {
                   return _buildRachaSquare(
+                    emoji: '🔥',
                     label: 'Días',
                     value: '0',
                     color: Colors.red,
                   );
                 }
                 return _buildRachaSquare(
+                  emoji: '🔥',
                   label: 'Días',
                   value: '${racha.cantidad}',
                   color: Colors.red,
@@ -80,14 +92,15 @@ class RachaIndicator extends ConsumerWidget {
     );
   }
 
-  /// Construye un cuadrado de racha con etiqueta y número
+  /// Construye un cuadrado de racha con emoji, etiqueta y número
   Widget _buildRachaSquare({
+    required String emoji,
     required String label,
     required String value,
     required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.35),
         borderRadius: BorderRadius.circular(12),
@@ -98,20 +111,26 @@ class RachaIndicator extends ConsumerWidget {
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
+          Text(
+            emoji,
+            style: const TextStyle(fontSize: 20),
+          ),
+          const SizedBox(height: 4),
           Text(
             value,
             style: TextStyle(
-              fontSize: 32,
+              fontSize: 24,
               fontWeight: FontWeight.bold,
               color: color,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
             label,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 10,
               color: Colors.white.withValues(alpha: 0.6),
               fontWeight: FontWeight.w500,
             ),
