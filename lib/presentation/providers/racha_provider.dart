@@ -19,14 +19,14 @@ final initializeRachasProvider = FutureProvider<void>((ref) async {
 });
 
 /// Provider que observa cambios en hábitos y actualiza rachas
-final habitsChangeListener = StreamProvider<void>((ref) async* {
+final habitsChangeListener = StreamProvider<int>((ref) async* {
   final box = await Hive.openBox<Habito>(HiveBoxNames.habito);
   
-  yield; // Emitir inmediatamente
+  yield 0; // Emitir valor inicial
   
   // Escuchar cambios en la caja
   await for (final _ in box.watch()) {
-    yield;
+    yield DateTime.now().millisecondsSinceEpoch;
   }
 });
 
