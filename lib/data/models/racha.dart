@@ -1,26 +1,24 @@
 import 'package:hive/hive.dart';
 
-part 'racha.g.dart';
-
-@HiveType(typeId: 10)
+@HiveType(typeId: 11)
 class Racha {
   @HiveField(0)
   int idRacha;
 
   @HiveField(1)
-  String tipo; // 'diaria' o 'semanal'
+  String tipo;
 
   @HiveField(2)
-  int cantidad; // Número de días/semanas consecutivos
+  int cantidad;
 
   @HiveField(3)
-  String fechaUltimoCompletado; // Último día que se cumplió
+  String fechaUltimoCompletado;
 
   @HiveField(4)
-  bool enRiesgo; // Solo para semanal: si no se completó esta semana
+  bool enRiesgo;
 
   @HiveField(5)
-  String fechaInicioPeriodoRecuperacion; // Fecha cuando empezó el período de recuperación (solo semanal)
+  String fechaInicioPeriodoRecuperacion;
 
   @HiveField(6)
   String? fechaCreacion;
@@ -35,7 +33,6 @@ class Racha {
     this.fechaCreacion,
   });
 
-  /// Copia profunda del objeto
   Racha copyWith({
     int? idRacha,
     String? tipo,
@@ -61,13 +58,10 @@ class Racha {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 
-  /// Obtiene la fecha formateada actual
   static String getTodayFormatted() => _formatDate(DateTime.now());
 
-  /// Compara dos fechas (solo año-mes-día)
   static bool isSameDay(String fecha1, String fecha2) => fecha1 == fecha2;
 
-  /// Compara si es el día siguiente
   static bool isNextDay(String previousDay, String nextDay) {
     try {
       final prev = DateTime.parse(previousDay);
@@ -78,14 +72,12 @@ class Racha {
     }
   }
 
-  /// Obtiene el número de la semana ISO para una fecha
   static int getWeekNumber(DateTime date) {
     final firstDayOfYear = DateTime(date.year, 1, 1);
     final difference = date.difference(firstDayOfYear).inDays;
     return ((difference + firstDayOfYear.weekday) / 7).ceil();
   }
 
-  /// Verifica si dos fechas están en la misma semana
   static bool isSameWeek(String fecha1, String fecha2) {
     try {
       final date1 = DateTime.parse(fecha1);
@@ -96,21 +88,18 @@ class Racha {
     }
   }
 
-  /// Obtiene el lunes de la semana actual
   static String getMondayOfWeek(DateTime date) {
-    final dayOfWeek = date.weekday; // 1 = lunes, 7 = domingo
+    final dayOfWeek = date.weekday;
     final monday = date.subtract(Duration(days: dayOfWeek - 1));
     return _formatDate(monday);
   }
 
-  /// Obtiene el domingo de la semana actual
   static String getSundayOfWeek(DateTime date) {
-    final dayOfWeek = date.weekday; // 1 = lunes, 7 = domingo
+    final dayOfWeek = date.weekday;
     final sunday = date.add(Duration(days: 7 - dayOfWeek));
     return _formatDate(sunday);
   }
 
-  /// Calcula los días entre dos fechas
   static int daysBetween(String fecha1, String fecha2) {
     try {
       final date1 = DateTime.parse(fecha1);
@@ -120,4 +109,54 @@ class Racha {
       return 0;
     }
   }
+}
+
+class RachaAdapter extends TypeAdapter<Racha> {
+  @override
+  final int typeId = 11;
+
+  @override
+  Racha read(BinaryReader reader) {
+    final numOfFields = reader.readByte();
+    final fields = <int, dynamic>{
+      for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
+    };
+    return Racha(
+      idRacha: fields[0] as int,
+      tipo: fields[1] as String,
+      cantidad: fields[2] as int,
+      fechaUltimoCompletado: fields[3] as String,
+      enRiesgo: fields[4] as bool? ?? false,
+      fechaInicioPeriodoRecuperacion: fields[5] as String? ?? '',
+      fechaCreacion: fields[6] as String?,
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, Racha obj) {
+    writer
+      ..writeByte(7)
+      ..writeByte(0)
+      ..write(obj.idRacha)
+      ..writeByte(1)
+      ..write(obj.tipo)
+      ..writeByte(2)
+      ..write(obj.cantidad)
+      ..writeByte(3)
+      ..write(obj.fechaUltimoCompletado)
+      ..writeByte(4)
+      ..write(obj.enRiesgo)
+      ..writeByte(5)
+      ..write(obj.fechaInicioPeriodoRecuperacion)
+      ..writeByte(6)
+      ..write(obj.fechaCreacion);
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RachaAdapter && runtimeType == other.runtimeType && typeId == other.typeId;
 }

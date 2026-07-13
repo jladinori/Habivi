@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:habivi/presentation/features/achievements/achievements_screen.dart';
 import 'package:habivi/presentation/features/task/task_screen.dart';
 import 'package:habivi/presentation/features/habits/habit_detail_screen.dart';
 import 'package:habivi/presentation/features/habits/habits_list_screen.dart';
@@ -93,7 +94,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
-      // Settings accesible via push (no es pestaña)
       GoRoute(
         path: '/settings',
         parentNavigatorKey: _rootNavigatorKey,
@@ -110,6 +110,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) => _slideTransition(context, state, const LoginScreen()),
           ),
         ],
+      ),
+      GoRoute(
+        path: '/achievements',
+        pageBuilder: (context, state) =>
+            _slideTransition(context, state, const AchievementsScreen()),
       ),
     ],
   );

@@ -47,7 +47,7 @@ class HabitsListScreen extends ConsumerStatefulWidget {
 
 class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
   late HabitRepository _repository;
-  List<MapEntry<dynamic, Habito>> _habitos = [];
+  List<Habito> _habitos = [];
 
   @override
   void initState() {
@@ -60,9 +60,10 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
     try {
       final habitosMap = await _repository.readAll();
       setState(() {
-        _habitos = habitosMap.entries.toList();
+        _habitos = habitosMap.values.toList();
+        // Sincronizar y resetear por día si es necesario
+        _verificarResetearPorDia();
       });
-      await _verificarResetearPorDia();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -72,21 +73,19 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
     }
   }
 
-  Future<void> _verificarResetearPorDia() async {
+  void _verificarResetearPorDia() {
     final hoy = _obtenerFechaHoy();
     bool cambio = false;
     for (int i = 0; i < _habitos.length; i++) {
-      final entry = _habitos[i];
-      final habito = entry.value;
+      final habito = _habitos[i];
       final completadoEnBD = habito.safeFechasCompletadas.contains(hoy);
       if (habito.completadoHoy != completadoEnBD) {
         habito.completadoHoy = completadoEnBD;
-        await _repository.update(entry.key, habito);
-        _habitos[i] = MapEntry(entry.key, habito);
+        _repository.updateAt(i, habito);
         cambio = true;
       }
     }
-    if (cambio && mounted) {
+    if (cambio) {
       setState(() {});
     }
   }
@@ -104,17 +103,10 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
     return Icons.spa;
   }
 
-  Future<void> _agregarHabitoDialogo(
-    String nombre,
-    String descripcion,
-    String aspecto,
-    int vecesPorSemana,
-  ) async {
+  Future<void> _agregarHabitoDialogo(String nombre, String descripcion, String aspecto) async {
     try {
-      final nextId = _habitos.isEmpty
-          ? 0
-          : _habitos.map((h) => h.value.idHabito).reduce((a, b) => a > b ? a : b) + 1;
-
+      final nextId = _habitos.isEmpty ? 0 : _habitos.map((h) => h.idHabito).reduce((a, b) => a > b ? a : b) + 1;
+      
       final defaultIconForAspect = {
         'físico': 'run',
         'mental': 'book',
@@ -131,8 +123,6 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
         completadoHoy: false,
         fechaUltimoCompletado: '',
         fechasCompletadas: [],
-        vecesPorSemana: vecesPorSemana,
-        fechaCreacion: _obtenerFechaHoy(),
       );
 
       await _repository.add(nuevoHabito);
@@ -148,8 +138,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
 
   Future<void> _marcarCompletado(int index) async {
     try {
-      final entry = _habitos[index];
-      final habito = entry.value;
+      final habito = _habitos[index];
       final hoy = _obtenerFechaHoy();
       habito.completadoHoy = !habito.completadoHoy;
       habito.fechaUltimoCompletado = hoy;
@@ -165,9 +154,9 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
       habito.fechasCompletadas = list;
 
       // Guardar el cambio en la BD local
-      await _repository.update(entry.key, habito);
+      await _repository.updateAt(index, habito);
       setState(() {
-        _habitos[index] = MapEntry(entry.key, habito);
+        _habitos[index] = habito;
       });
 
       if (mounted && habito.completadoHoy) {
@@ -189,8 +178,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
 
   Future<void> _deleteHabito(int index) async {
     try {
-      final key = _habitos[index].key;
-      await _repository.delete(key);
+      await _repository.deleteAt(index);
       await _loadHabitos();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -206,85 +194,9 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
     }
   }
 
-  void _mostrarDialogoEditarFrecuencia(int index, dynamic key, Habito habito) {
-    int frecuencia = habito.safeVecesPorSemana;
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setStateDialog) {
-            return AlertDialog(
-              title: const Text('Editar frecuencia'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('¿Cuántas veces por semana debería repetirse?'),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      IconButton(
-                        onPressed: () {
-                          if (frecuencia > 1) {
-                            setStateDialog(() {
-                              frecuencia--;
-                            });
-                          }
-                        },
-                        icon: const Icon(Icons.remove),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        '$frecuencia',
-                        style: const TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(width: 12),
-                      IconButton(
-                        onPressed: () {
-                          if (frecuencia < 7) {
-                            setStateDialog(() {
-                              frecuencia++;
-                            });
-                          }
-                        },
-                        icon: const Icon(Icons.add),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancelar'),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    final dialogContext = context;
-                    habito.vecesPorSemana = frecuencia;
-                    await _repository.update(key, habito);
-                    if (!dialogContext.mounted) return;
-                    setState(() {
-                      _habitos[index] = MapEntry(key, habito);
-                    });
-                    Navigator.of(dialogContext).pop();
-                  },
-                  child: const Text('Guardar'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  void _mostrarSelectorIconos(int index, dynamic habitKey, Habito habito) {
+  void _mostrarSelectorIconos(int index, Habito habito) {
     final color = _habitColors[habito.idHabito % _habitColors.length];
-    final listIconos =
-        _iconosPorAspecto[habito.aspecto] ?? _iconosPorAspecto['físico']!;
+    final listIconos = _iconosPorAspecto[habito.aspecto] ?? _iconosPorAspecto['físico']!;
 
     showDialog(
       context: context,
@@ -308,15 +220,13 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
 
                 return InkWell(
                   onTap: () async {
-                    final dialogContext = context;
                     habito.iconoKey = key;
-                    await _repository.update(habitKey, habito);
-                    if (!dialogContext.mounted) return;
-                    setState(() {
-                      _habitos[index] = MapEntry(habitKey, habito);
-                    });
-                    Navigator.of(dialogContext).pop();
-                  },                  child: Container(                    decoration: BoxDecoration(
+                    await _repository.updateAt(index, habito);
+                    setState(() {});
+                    Navigator.pop(context);
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
@@ -345,7 +255,6 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
     final nameController = TextEditingController();
     final descController = TextEditingController();
     String seleccionadoAspecto = 'físico';
-    int vecesPorSemanaSeleccionadas = 1;
 
     showDialog(
       context: context,
@@ -423,55 +332,6 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Frecuencia semanal:',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          '$vecesPorSemanaSeleccionadas veces por semana',
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                        Row(
-                          children: [
-                            IconButton(
-                              onPressed: () {
-                                if (vecesPorSemanaSeleccionadas > 1) {
-                                  setStateDialog(() {
-                                    vecesPorSemanaSeleccionadas--;
-                                  });
-                                }
-                              },
-                              icon: const Icon(Icons.remove),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              '$vecesPorSemanaSeleccionadas',
-                              style: const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(width: 8),
-                            IconButton(
-                              onPressed: () {
-                                if (vecesPorSemanaSeleccionadas < 7) {
-                                  setStateDialog(() {
-                                    vecesPorSemanaSeleccionadas++;
-                                  });
-                                }
-                              },
-                              icon: const Icon(Icons.add),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
                   ],
                 ),
               ),
@@ -494,7 +354,6 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                       nombre,
                       descController.text.trim(),
                       seleccionadoAspecto,
-                      vecesPorSemanaSeleccionadas,
                     );
                   },
                   child: const Text('Agregar'),
@@ -534,14 +393,11 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                       ),
                     )
                   : ListView.builder(
-                      padding: const EdgeInsets.only(
-                          left: 16, right: 16, bottom: 80),
+                      padding: const EdgeInsets.only(left: 16, right: 16, bottom: 80),
                       itemCount: _habitos.length,
                       itemBuilder: (context, index) {
-                        final entry = _habitos[index];
-                        final habito = entry.value;
-                        final color =
-                            _habitColors[habito.idHabito % _habitColors.length];
+                        final habito = _habitos[index];
+                        final color = _habitColors[habito.idHabito % _habitColors.length];
                         final icon = _getIconForHabit(habito);
 
                         return Padding(
@@ -583,16 +439,13 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                                       children: [
                                         // Icono decorado con fondo opaco y selector interactivo al pulsar
                                         GestureDetector(
-                                          onTap: () => _mostrarSelectorIconos(
-                                              index, entry.key, habito),
+                                          onTap: () => _mostrarSelectorIconos(index, habito),
                                           child: Container(
                                             width: 44,
                                             height: 44,
                                             decoration: BoxDecoration(
-                                              color:
-                                                  color.withValues(alpha: 0.12),
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
+                                              color: color.withValues(alpha: 0.12),
+                                              borderRadius: BorderRadius.circular(10),
                                             ),
                                             child: Icon(
                                               icon,
@@ -605,8 +458,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                                         // Título y descripción (atributo)
                                         Expanded(
                                           child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
+                                            crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
                                               Text(
                                                 habito.nombreHabito,
@@ -625,20 +477,10 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                                                     : 'Cada día cuenta para mejorar.',
                                                 style: TextStyle(
                                                   fontSize: 12,
-                                                  color: Colors.white
-                                                      .withValues(alpha: 0.5),
+                                                  color: Colors.white.withValues(alpha: 0.5),
                                                 ),
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
-                                              ),
-                                              const SizedBox(height: 6),
-                                              Text(
-                                                'Repite ${habito.safeVecesPorSemana} veces/semana',
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: Colors.white
-                                                      .withValues(alpha: 0.55),
-                                                ),
                                               ),
                                             ],
                                           ),
@@ -648,22 +490,18 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                                         GestureDetector(
                                           onTap: () => _marcarCompletado(index),
                                           child: AnimatedContainer(
-                                            duration: const Duration(
-                                                milliseconds: 200),
+                                            duration: const Duration(milliseconds: 200),
                                             width: 44,
                                             height: 44,
                                             decoration: BoxDecoration(
                                               color: habito.completadoHoy
                                                   ? color
-                                                  : Colors.white
-                                                      .withValues(alpha: 0.05),
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
+                                                  : Colors.white.withValues(alpha: 0.05),
+                                              borderRadius: BorderRadius.circular(10),
                                               border: Border.all(
                                                 color: habito.completadoHoy
                                                     ? Colors.transparent
-                                                    : Colors.white.withValues(
-                                                        alpha: 0.15),
+                                                    : Colors.white.withValues(alpha: 0.15),
                                                 width: 1.5,
                                               ),
                                             ),
@@ -671,8 +509,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                                               Icons.check,
                                               color: habito.completadoHoy
                                                   ? Colors.white
-                                                  : Colors.white
-                                                      .withValues(alpha: 0.15),
+                                                  : Colors.white.withValues(alpha: 0.15),
                                               size: 24,
                                             ),
                                           ),
@@ -680,39 +517,9 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                                       ],
                                     ),
                                     const SizedBox(height: 16),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          'Frecuencia: ${habito.safeVecesPorSemana}/sem',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.white
-                                                .withValues(alpha: 0.55),
-                                          ),
-                                        ),
-                                        TextButton.icon(
-                                          onPressed: () =>
-                                              _mostrarDialogoEditarFrecuencia(
-                                                  index, entry.key, habito),
-                                          icon:
-                                              const Icon(Icons.edit, size: 16),
-                                          label: const Text('Editar'),
-                                          style: TextButton.styleFrom(
-                                            foregroundColor: Colors.white
-                                                .withValues(alpha: 0.75),
-                                            visualDensity:
-                                                VisualDensity.compact,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 16),
                                     // Tablero de contribuciones del año alineado por semanas
                                     HabitContributionBoard(
-                                      fechasCompletadas:
-                                          habito.safeFechasCompletadas,
+                                      fechasCompletadas: habito.safeFechasCompletadas,
                                       baseColor: color,
                                     ),
                                   ],
