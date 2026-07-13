@@ -6,7 +6,6 @@ enum CharacterMood {
   sonoliento,
   apagado,
   triste,
-  frustrado,
   sinEnergia,
 }
 
@@ -17,16 +16,17 @@ extension CharacterMoodInfo on CharacterMood {
         CharacterMood.sonoliento => 'Soñoliento',
         CharacterMood.apagado => 'Apagado',
         CharacterMood.triste => 'Triste',
-        CharacterMood.frustrado => 'Frustrado',
         CharacterMood.sinEnergia => 'Sin energía',
       };
 
   String get mensaje => switch (this) {
         CharacterMood.feliz => '¡Vamos genial! Sigue así 💪',
-        CharacterMood.frustrado => 'Estás dando mucho en un solo aspecto. ¡Equilibra cuerpo, mente y alma!',
+        CharacterMood.frustrado =>
+            'Estás dando mucho en un solo aspecto. ¡Equilibra cuerpo, mente y alma!',
         CharacterMood.sonoliento => 'Vamos bien, pero hoy puedes dar un pasito más.',
         CharacterMood.apagado => 'Ivi te extraña... completa un hábito para despertarlo.',
         CharacterMood.triste => 'Energía baja. Un hábito pequeño puede cambiar el día.',
+        CharacterMood.sinEnergia => 'Sin energía. Descansa y vuelve mañana.',
       };
 
   IconData get icon => switch (this) {
@@ -35,6 +35,7 @@ extension CharacterMoodInfo on CharacterMood {
         CharacterMood.sonoliento => Icons.bedtime,
         CharacterMood.apagado => Icons.power_settings_new,
         CharacterMood.triste => Icons.sentiment_dissatisfied,
+        CharacterMood.sinEnergia => Icons.battery_alert,
       };
 
   Color get color => switch (this) {
@@ -43,5 +44,6 @@ extension CharacterMoodInfo on CharacterMood {
         CharacterMood.sonoliento => Colors.amber,
         CharacterMood.apagado => Colors.blueGrey,
         CharacterMood.triste => Colors.red,
+        CharacterMood.sinEnergia => Colors.purple,
       };
 }

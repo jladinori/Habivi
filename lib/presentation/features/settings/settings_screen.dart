@@ -67,6 +67,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           nombre: nombre,
           apellido: apellido,
           energia: 100,
+          energiaMax: 100,
+          puntosProductividad: 0,
+          estadoPersonaje: '',
+          fechaInicio: '',
         );
         await _userRepo.add(nuevoUsuario);
         _usuario = nuevoUsuario;

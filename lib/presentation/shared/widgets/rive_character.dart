@@ -22,6 +22,7 @@ class RiveCharacter extends StatelessWidget {
       CharacterMood.sonoliento => 'sonoliento.gif',
       CharacterMood.apagado => 'apagado.gif',
       CharacterMood.triste => 'triste.gif',
+      CharacterMood.sinEnergia => 'triste.gif',
     };
     return 'assets/animations/$filename';
   }
@@ -32,6 +33,7 @@ class RiveCharacter extends StatelessWidget {
         CharacterMood.sonoliento => Icons.nightlight_round,
         CharacterMood.apagado => Icons.mood_bad,
         CharacterMood.triste => Icons.sentiment_dissatisfied,
+        CharacterMood.sinEnergia => Icons.battery_alert,
       };
 
   @override

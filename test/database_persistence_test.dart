@@ -41,7 +41,7 @@ void main() {
       final box = await Hive.openBox<Usuario>(HiveBoxNames.usuario);
 
       // Crear
-      final usuario = Usuario(idUsuario: 1, nombre: 'Carlos', apellido: 'López', energia: 85);
+      final usuario = Usuario(idUsuario: 1, nombre: 'Carlos', apellido: 'López', energia: 85, energiaMax: 100, puntosProductividad: 0, estadoPersonaje: '', fechaInicio: '');
       await box.add(usuario);
       await box.flush();
 
@@ -73,9 +73,9 @@ void main() {
 
     test('valores extremos – energía al límite', () async {
       final box = await Hive.openBox<Usuario>(HiveBoxNames.usuario);
-      await box.add(Usuario(idUsuario: 2, nombre: 'Test', apellido: '', energia: 0));
-      await box.add(Usuario(idUsuario: 3, nombre: '', apellido: 'Apellido', energia: 100));
-      await box.add(Usuario(idUsuario: 4, nombre: testString, apellido: testString, energia: 50));
+      await box.add(Usuario(idUsuario: 2, nombre: 'Test', apellido: '', energia: 0, energiaMax: 100, puntosProductividad: 0, estadoPersonaje: '', fechaInicio: ''));
+      await box.add(Usuario(idUsuario: 3, nombre: '', apellido: 'Apellido', energia: 100, energiaMax: 100, puntosProductividad: 0, estadoPersonaje: '', fechaInicio: ''));
+      await box.add(Usuario(idUsuario: 4, nombre: testString, apellido: testString, energia: 50, energiaMax: 100, puntosProductividad: 0, estadoPersonaje: '', fechaInicio: ''));
       await box.flush();
 
       expect(box.getAt(0)!.energia, 0);
@@ -228,8 +228,7 @@ void main() {
     test('CRUD completo con metadata', () async {
       final box = await Hive.openBox<Tarea>(HiveBoxNames.tarea);
 
-      final metadata = Tarea.crearMetadata('2026-07-15', 'Comprar materiales');
-      final tarea = Tarea(1, 'Estudiar matemáticas', 50, metadata: metadata);
+      final tarea = Tarea(1, 'Estudiar matemáticas', 50, fecha: '2026-07-15', notas: 'Comprar materiales');
       await box.add(tarea);
       await box.flush();
 
@@ -448,6 +447,7 @@ void main() {
       expect(box.get(2)!.cantidad, 4);
       expect(box.get(2)!.enRiesgo, false);
 
+      await box.flush();
       await box.clear();
       await box.close();
     });
@@ -460,7 +460,7 @@ void main() {
     test('todos los datos sobreviven al cierre y reapertura', () async {
       // --- Insertar datos ---
       final uBox = await Hive.openBox<Usuario>(HiveBoxNames.usuario);
-      await uBox.add(Usuario(idUsuario: 1, nombre: 'Persistencia', apellido: 'Test', energia: 77));
+      await uBox.add(Usuario(idUsuario: 1, nombre: 'Persistencia', apellido: 'Test', energia: 77, energiaMax: 100, puntosProductividad: 0, estadoPersonaje: '', fechaInicio: ''));
       await uBox.flush();
       await uBox.close();
 
@@ -475,7 +475,7 @@ void main() {
       await rBox.close();
 
       final tBox = await Hive.openBox<Tarea>(HiveBoxNames.tarea);
-      await tBox.add(Tarea(1, 'Tarea persistente', 30, metadata: Tarea.crearMetadata('2026-07-10', '')));
+      await tBox.add(Tarea(1, 'Tarea persistente', 30, fecha: '2026-07-10'));
       await tBox.flush();
       await tBox.close();
 
@@ -530,7 +530,7 @@ void main() {
 
     test('caja de usuario con energía 0 y valores vacíos persiste', () async {
       final box = await Hive.openBox<Usuario>(HiveBoxNames.usuario);
-      await box.put(99, Usuario(idUsuario: 99, nombre: '', apellido: '', energia: 0));
+      await box.put(99, Usuario(idUsuario: 99, nombre: '', apellido: '', energia: 0, energiaMax: 100, puntosProductividad: 0, estadoPersonaje: '', fechaInicio: ''));
       await box.flush();
       await box.close();
 
