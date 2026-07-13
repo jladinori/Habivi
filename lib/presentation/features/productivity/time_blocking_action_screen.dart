@@ -58,7 +58,7 @@ class _TimeBlockingActionScreenState extends State<TimeBlockingActionScreen> {
                         SizedBox(
                           width: 60,
                           child: TextField(
-                            initialValue: bloque.hora,
+                            controller: bloque.horaController,
                             decoration: InputDecoration(
                               hintText: 'HH:MM',
                               border: OutlineInputBorder(
@@ -66,15 +66,12 @@ class _TimeBlockingActionScreenState extends State<TimeBlockingActionScreen> {
                               ),
                               contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                             ),
-                            onChanged: (value) {
-                              bloques[index].hora = value;
-                            },
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: TextField(
-                            initialValue: bloque.actividad,
+                            controller: bloque.actividadController,
                             decoration: InputDecoration(
                               hintText: 'Actividad',
                               border: OutlineInputBorder(
@@ -82,9 +79,6 @@ class _TimeBlockingActionScreenState extends State<TimeBlockingActionScreen> {
                               ),
                               contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                             ),
-                            onChanged: (value) {
-                              bloques[index].actividad = value;
-                            },
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -92,6 +86,8 @@ class _TimeBlockingActionScreenState extends State<TimeBlockingActionScreen> {
                           icon: const Icon(Icons.delete_outline),
                           onPressed: () {
                             setState(() {
+                              bloques[index].horaController.dispose();
+                              bloques[index].actividadController.dispose();
                               bloques.removeAt(index);
                             });
                           },
@@ -127,7 +123,7 @@ class _TimeBlockingActionScreenState extends State<TimeBlockingActionScreen> {
   }
 
   void _guardarBloques() {
-    if (bloques.isEmpty || bloques.any((b) => b.actividad.isEmpty)) {
+    if (bloques.isEmpty || bloques.any((b) => b.actividadController.text.isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Por favor completa todos los bloques')),
       );
@@ -142,11 +138,23 @@ class _TimeBlockingActionScreenState extends State<TimeBlockingActionScreen> {
     );
     Navigator.pop(context);
   }
+
+  @override
+  void dispose() {
+    for (var bloque in bloques) {
+      bloque.horaController.dispose();
+      bloque.actividadController.dispose();
+    }
+    super.dispose();
+  }
 }
 
 class _Bloque {
-  String hora;
-  String actividad;
+  late TextEditingController horaController;
+  late TextEditingController actividadController;
 
-  _Bloque({required this.hora, required this.actividad});
+  _Bloque({required String hora, required String actividad}) {
+    horaController = TextEditingController(text: hora);
+    actividadController = TextEditingController(text: actividad);
+  }
 }
