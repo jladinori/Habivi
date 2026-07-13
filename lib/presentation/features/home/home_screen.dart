@@ -142,7 +142,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
 
-            // === OVERLAY: Rachas ARRIBA + Barra de energía ABAJO ===
+            // === OVERLAY: Barra de energía con rachas encima ===
             moodAsync.when(
               loading: () => const SizedBox.shrink(),
               error: (_, __) => const SizedBox.shrink(),
@@ -150,87 +150,77 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 final moodColor = HabitMoodService.getMoodColor(moodPercentage);
                 final moodPercentInt = (moodPercentage * 100).toInt();
 
-                return Stack(
-                  children: [
-                    // === RACHAS ARRIBA ===
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      top: 100,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: const RachaIndicator(),
+                return Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withValues(alpha: 0.4),
+                          Colors.black.withValues(alpha: 0.8),
+                        ],
+                        stops: const [0.0, 0.3, 1.0],
                       ),
                     ),
-
-                    // === BARRA DE ENERGÍA ABAJO ===
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.transparent,
-                              Colors.black.withValues(alpha: 0.4),
-                              Colors.black.withValues(alpha: 0.8),
-                            ],
-                            stops: const [0.0, 0.3, 1.0],
-                          ),
+                    padding: const EdgeInsets.fromLTRB(16, 40, 16, 24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // === RACHAS ENCIMA DE LA BARRA ===
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: const RachaIndicator(),
                         ),
-                        padding: const EdgeInsets.fromLTRB(16, 40, 16, 24),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // Barra de estado compacta
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 10,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 0.35),
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: moodColor.withValues(alpha: 0.3),
-                                  width: 1,
+                        
+                        // Barra de estado compacta
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.35),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: moodColor.withValues(alpha: 0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(6),
+                                  child: LinearProgressIndicator(
+                                    value: moodPercentage,
+                                    backgroundColor:
+                                        Colors.white.withValues(alpha: 0.1),
+                                    valueColor:
+                                        AlwaysStoppedAnimation(moodColor),
+                                    minHeight: 8,
+                                  ),
                                 ),
                               ),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(6),
-                                      child: LinearProgressIndicator(
-                                        value: moodPercentage,
-                                        backgroundColor:
-                                            Colors.white.withValues(alpha: 0.1),
-                                        valueColor:
-                                            AlwaysStoppedAnimation(moodColor),
-                                        minHeight: 8,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Text(
-                                    '$moodPercentInt%',
-                                    style: TextStyle(
-                                      color: moodColor,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
+                              const SizedBox(width: 10),
+                              Text(
+                                '$moodPercentInt%',
+                                style: TextStyle(
+                                  color: moodColor,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 );
               },
             ),
