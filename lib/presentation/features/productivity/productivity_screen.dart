@@ -339,7 +339,7 @@ class _ProductivityScreenState extends ConsumerState<ProductivityScreen> {
         ),
         const SizedBox(height: 24),
         ElevatedButton.icon(
-          onPressed: () => context.push('/productivity/pomodoro'),
+          onPressed: () => context.push('/productivity/pomodoro-info'),
           icon: const Icon(Icons.timer),
           label: const Text('Abrir Pomodoro'),
           style: ElevatedButton.styleFrom(
