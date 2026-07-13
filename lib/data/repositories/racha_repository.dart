@@ -38,26 +38,31 @@ class RachaRepository {
   Future<void> create(Racha racha) async {
     final box = await _box;
     await box.put(racha.idRacha, racha);
+    await box.flush();
   }
 
   Future<void> updateAt(int key, Racha racha) async {
     final box = await _box;
     await box.put(key, racha);
+    await box.flush();
   }
 
   Future<void> update(Racha racha) async {
     final box = await _box;
     await box.put(racha.idRacha, racha);
+    await box.flush();
   }
 
   Future<void> deleteAt(int key) async {
     final box = await _box;
     await box.delete(key);
+    await box.flush();
   }
 
   Future<void> deleteAll() async {
     final box = await _box;
     await box.clear();
+    await box.flush();
   }
 
   Future<void> initializeDefaults() async {

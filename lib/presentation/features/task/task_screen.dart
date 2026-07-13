@@ -81,6 +81,7 @@ class _TaskScreenState extends State<TaskScreen> {
     try {
       final box = await _repository.box;
       await box.delete(key);
+      await box.flush();
       await _cargarTareas();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -100,6 +101,7 @@ class _TaskScreenState extends State<TaskScreen> {
     try {
       final box = await _repository.box;
       await box.delete(key);
+      await box.flush();
       await _cargarTareas();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

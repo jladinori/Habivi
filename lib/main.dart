@@ -16,7 +16,6 @@ void main() async {
   );
 }
 
-/// Wrapper que cierra Hive correctamente cuando la app se cierra o pausa.
 class _AppLifecycleWrapper extends StatefulWidget {
   final Widget child;
   const _AppLifecycleWrapper({required this.child});
@@ -41,8 +40,7 @@ class _AppLifecycleWrapperState extends State<_AppLifecycleWrapper>
 
   @override
   Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
-    if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.detached) {
+    if (state == AppLifecycleState.detached) {
       await HiveInitializer.closeAll();
     }
   }
