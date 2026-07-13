@@ -9,6 +9,8 @@ import 'package:habivi/presentation/features/auth/login_screen.dart';
 import 'package:habivi/presentation/features/notes/notes_screen.dart';
 import 'package:habivi/presentation/features/settings/settings_screen.dart';
 import 'package:habivi/presentation/features/productivity/productivity_screen.dart';
+import 'package:habivi/presentation/features/productivity/pomodoro_info_screen.dart';
+import 'package:habivi/presentation/features/productivity/pomodoro_config_screen.dart';
 import 'package:habivi/presentation/features/productivity/pomodoro_screen.dart';
 import 'package:habivi/presentation/shell/main_shell.dart';
 
@@ -83,9 +85,29 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 pageBuilder: (context, state) => _slideTransition(context, state, const ProductivityScreen()),
                 routes: [
                   GoRoute(
+                    path: 'pomodoro-info',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => _slideTransition(context, state, const PomodoroInfoScreen()),
+                  ),
+                  GoRoute(
+                    path: 'pomodoro-config',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => _slideTransition(context, state, const PomodoroConfigScreen()),
+                  ),
+                  GoRoute(
                     path: 'pomodoro',
                     parentNavigatorKey: _rootNavigatorKey,
-                    pageBuilder: (context, state) => _slideTransition(context, state, const PomodoroScreen()),
+                    pageBuilder: (context, state) {
+                      final args = state.extra as Map<String, int>?;
+                      return _slideTransition(
+                        context,
+                        state,
+                        PomodoroScreen(
+                          tiempoTrabajo: args?['tiempoTrabajo'] ?? 25,
+                          tiempoDescanso: args?['tiempoDescanso'] ?? 5,
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
