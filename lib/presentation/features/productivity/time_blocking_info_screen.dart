@@ -1,0 +1,121 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+class TimeBlockingInfoScreen extends StatelessWidget {
+  const TimeBlockingInfoScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('📅 Time Blocking'),
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          const SizedBox(height: 8),
+          
+          // ¿Qué es?
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '¿Qué es?',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Consiste en dividir el día en bloques de tiempo donde cada bloque está dedicado a una única actividad.',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // ¿Para qué sirve?
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '¿Para qué sirve?',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Ayuda a organizar el tiempo y evita cambiar constantemente entre diferentes tareas.',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Ideal para
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Ideal para',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildActivityItem(context, '📅 Planificar el día'),
+                  _buildActivityItem(context, '💼 Trabajo'),
+                  _buildActivityItem(context, '🎓 Universidad'),
+                  _buildActivityItem(context, '🗂️ Organización personal'),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 32),
+
+          // Botón Crear bloques
+          ElevatedButton.icon(
+            onPressed: () => context.push('/productivity/time-blocking-action'),
+            icon: const Icon(Icons.view_agenda),
+            label: const Text('Crear bloques'),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActivityItem(BuildContext context, String activity) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          const SizedBox(width: 8),
+          Text(
+            activity,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ],
+      ),
+    );
+  }
+}
