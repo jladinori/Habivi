@@ -12,6 +12,20 @@ import 'package:habivi/presentation/features/productivity/productivity_screen.da
 import 'package:habivi/presentation/features/productivity/pomodoro_info_screen.dart';
 import 'package:habivi/presentation/features/productivity/pomodoro_config_screen.dart';
 import 'package:habivi/presentation/features/productivity/pomodoro_screen.dart';
+import 'package:habivi/presentation/features/productivity/feynman_info_screen.dart';
+import 'package:habivi/presentation/features/productivity/feynman_action_screen.dart';
+import 'package:habivi/presentation/features/productivity/active_recall_info_screen.dart';
+import 'package:habivi/presentation/features/productivity/active_recall_action_screen.dart';
+import 'package:habivi/presentation/features/productivity/spaced_repetition_info_screen.dart';
+import 'package:habivi/presentation/features/productivity/spaced_repetition_action_screen.dart';
+import 'package:habivi/presentation/features/productivity/cornell_info_screen.dart';
+import 'package:habivi/presentation/features/productivity/cornell_action_screen.dart';
+import 'package:habivi/presentation/features/productivity/time_blocking_info_screen.dart';
+import 'package:habivi/presentation/features/productivity/time_blocking_action_screen.dart';
+import 'package:habivi/presentation/features/productivity/fifty_ten_info_screen.dart';
+import 'package:habivi/presentation/features/productivity/fifty_ten_config_screen.dart';
+import 'package:habivi/presentation/features/productivity/mind_maps_info_screen.dart';
+import 'package:habivi/presentation/features/productivity/mind_maps_action_screen.dart';
 import 'package:habivi/presentation/shell/main_shell.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -84,6 +98,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: '/productivity',
                 pageBuilder: (context, state) => _slideTransition(context, state, const ProductivityScreen()),
                 routes: [
+                  // Pomodoro
                   GoRoute(
                     path: 'pomodoro-info',
                     parentNavigatorKey: _rootNavigatorKey,
@@ -108,6 +123,83 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                         ),
                       );
                     },
+                  ),
+                  // Feynman
+                  GoRoute(
+                    path: 'feynman-info',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => _slideTransition(context, state, const FeynmanInfoScreen()),
+                  ),
+                  GoRoute(
+                    path: 'feynman-action',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => _slideTransition(context, state, const FeynmanActionScreen()),
+                  ),
+                  // Active Recall
+                  GoRoute(
+                    path: 'active-recall-info',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => _slideTransition(context, state, const ActiveRecallInfoScreen()),
+                  ),
+                  GoRoute(
+                    path: 'active-recall-action',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => _slideTransition(context, state, const ActiveRecallActionScreen()),
+                  ),
+                  // Spaced Repetition
+                  GoRoute(
+                    path: 'spaced-repetition-info',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => _slideTransition(context, state, const SpacedRepetitionInfoScreen()),
+                  ),
+                  GoRoute(
+                    path: 'spaced-repetition-action',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => _slideTransition(context, state, const SpacedRepetitionActionScreen()),
+                  ),
+                  // Cornell
+                  GoRoute(
+                    path: 'cornell-info',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => _slideTransition(context, state, const CornellInfoScreen()),
+                  ),
+                  GoRoute(
+                    path: 'cornell-action',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => _slideTransition(context, state, const CornellActionScreen()),
+                  ),
+                  // Time Blocking
+                  GoRoute(
+                    path: 'time-blocking-info',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => _slideTransition(context, state, const TimeBlockingInfoScreen()),
+                  ),
+                  GoRoute(
+                    path: 'time-blocking-action',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => _slideTransition(context, state, const TimeBlockingActionScreen()),
+                  ),
+                  // 50/10
+                  GoRoute(
+                    path: 'fifty-ten-info',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => _slideTransition(context, state, const FiftyTenInfoScreen()),
+                  ),
+                  GoRoute(
+                    path: 'fifty-ten-config',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => _slideTransition(context, state, const FiftyTenConfigScreen()),
+                  ),
+                  // Mind Maps
+                  GoRoute(
+                    path: 'mind-maps-info',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => _slideTransition(context, state, const MindMapsInfoScreen()),
+                  ),
+                  GoRoute(
+                    path: 'mind-maps-action',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => _slideTransition(context, state, const MindMapsActionScreen()),
                   ),
                 ],
               ),
