@@ -178,6 +178,45 @@ class _ProductivityScreenState extends ConsumerState<ProductivityScreen> {
     }
   }
 
+  void _abrirPantallaInfo(MetodoEstudioInfo metodo) {
+    // Navega a la pantalla informativa del método
+    switch (metodo.id) {
+      case 'pomodoro':
+        context.push('/productivity/pomodoro-info');
+        break;
+      case 'feynman':
+        // TODO: Implementar FeynmanInfoScreen
+        _registrarSesion(metodo);
+        break;
+      case 'active_recall':
+        // TODO: Implementar ActiveRecallInfoScreen
+        _registrarSesion(metodo);
+        break;
+      case 'spaced_repetition':
+        // TODO: Implementar SpacedRepetitionInfoScreen
+        _registrarSesion(metodo);
+        break;
+      case 'cornell':
+        // TODO: Implementar CornellInfoScreen
+        _registrarSesion(metodo);
+        break;
+      case 'time_blocking':
+        // TODO: Implementar TimeBlockingInfoScreen
+        _registrarSesion(metodo);
+        break;
+      case '50_10':
+        // TODO: Implementar 50_10InfoScreen
+        _registrarSesion(metodo);
+        break;
+      case 'mind_maps':
+        // TODO: Implementar MindMapsInfoScreen
+        _registrarSesion(metodo);
+        break;
+      default:
+        _registrarSesion(metodo);
+    }
+  }
+
   void _mostrarHistorial() {
     showModalBottomSheet(
       context: context,
@@ -330,20 +369,11 @@ class _ProductivityScreenState extends ConsumerState<ProductivityScreen> {
                   ),
                 ),
                 trailing: FilledButton.tonal(
-                  onPressed: () => _registrarSesion(metodo),
+                  onPressed: () => _abrirPantallaInfo(metodo),
                   child: const Text('+'),
                 ),
               ),
             ),
-          ),
-        ),
-        const SizedBox(height: 24),
-        ElevatedButton.icon(
-          onPressed: () => context.push('/productivity/pomodoro-info'),
-          icon: const Icon(Icons.timer),
-          label: const Text('Abrir Pomodoro'),
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16),
           ),
         ),
         const SizedBox(height: 32),
