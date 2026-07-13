@@ -1,23 +1,23 @@
 import 'package:hive/hive.dart';
 import 'package:habivi/core/constants/hive_box_names.dart';
-import 'package:habivi/data/models/sesion_pomodoro.dart';
+import 'package:habivi/data/models/sesion_estudio.dart';
 
-class PomodoroSessionRepository {
-  Box<SesionPomodoro>? _box;
+class EstudioRepository {
+  Box<SesionEstudio>? _box;
 
-  Future<Box<SesionPomodoro>> get box async {
+  Future<Box<SesionEstudio>> get box async {
     if (_box != null && _box!.isOpen) return _box!;
-    _box = await Hive.openBox<SesionPomodoro>(HiveBoxNames.sesionPomodoro);
+    _box = await Hive.openBox<SesionEstudio>(HiveBoxNames.sesionEstudio);
     return _box!;
   }
 
-  Future<void> add(SesionPomodoro sesion) async {
+  Future<void> add(SesionEstudio sesion) async {
     final b = await box;
     await b.add(sesion);
     await b.flush();
   }
 
-  Future<Map<dynamic, SesionPomodoro>> readAll() async {
+  Future<Map<dynamic, SesionEstudio>> readAll() async {
     final b = await box;
     return b.toMap();
   }
@@ -28,10 +28,19 @@ class PomodoroSessionRepository {
     await b.flush();
   }
 
-  Future<void> updateAt(int index, SesionPomodoro sesion) async {
+  Future<void> updateAt(int index, SesionEstudio sesion) async {
     final b = await box;
     await b.putAt(index, sesion);
     await b.flush();
+  }
+
+  Future<int> totalPuntos() async {
+    final b = await box;
+    int total = 0;
+    for (final s in b.values) {
+      total += s.puntosObtenidos;
+    }
+    return total;
   }
 
   Future<void> dispose() async {

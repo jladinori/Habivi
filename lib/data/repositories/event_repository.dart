@@ -14,6 +14,7 @@ class EventRepository {
   Future<void> add(Evento evento) async {
     final b = await box;
     await b.add(evento);
+    await b.flush();
   }
 
   Future<Map<dynamic, Evento>> readAll() async {
@@ -24,11 +25,13 @@ class EventRepository {
   Future<void> deleteAt(int index) async {
     final b = await box;
     await b.deleteAt(index);
+    await b.flush();
   }
 
   Future<void> updateAt(int index, Evento evento) async {
     final b = await box;
     await b.putAt(index, evento);
+    await b.flush();
   }
 
   Future<void> dispose() async {

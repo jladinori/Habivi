@@ -4,7 +4,10 @@ import 'package:habivi/data/models/cuenta.dart';
 import 'package:habivi/data/models/evento.dart';
 import 'package:habivi/data/models/habito.dart';
 import 'package:habivi/data/models/nota.dart';
+import 'package:habivi/data/models/logro.dart';
+import 'package:habivi/data/models/racha.dart';
 import 'package:habivi/data/models/registro_habito.dart';
+import 'package:habivi/data/models/sesion_estudio.dart';
 import 'package:habivi/data/models/sesion_pomodoro.dart';
 import 'package:habivi/data/models/tarea.dart';
 import 'package:habivi/data/models/usuario.dart';
@@ -20,6 +23,11 @@ class HiveInitializer {
   static Future<void> initForTesting(String path) async {
     Hive.init(path);
     registerAdapters();
+  }
+
+  /// Cierra todas las cajas Hive. Llamar al terminar la app.
+  static Future<void> closeAll() async {
+    await Hive.close();
   }
 
   static void registerAdapters() {
@@ -49,6 +57,15 @@ class HiveInitializer {
     }
     if (!Hive.isAdapterRegistered(8)) {
       Hive.registerAdapter(BackupAdapter());
+    }
+    if (!Hive.isAdapterRegistered(9)) {
+      Hive.registerAdapter(SesionEstudioAdapter());
+    }
+    if (!Hive.isAdapterRegistered(10)) {
+      Hive.registerAdapter(LogroAdapter());
+    }
+    if (!Hive.isAdapterRegistered(11)) {
+      Hive.registerAdapter(RachaAdapter());
     }
   }
 }

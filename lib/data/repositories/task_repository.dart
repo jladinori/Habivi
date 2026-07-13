@@ -14,6 +14,7 @@ class TaskRepository {
   Future<void> add(Tarea tarea) async {
     final b = await box;
     await b.add(tarea);
+    await b.flush();
   }
 
   Future<Map<dynamic, Tarea>> readAll() async {
@@ -24,11 +25,13 @@ class TaskRepository {
   Future<void> deleteAt(int index) async {
     final b = await box;
     await b.deleteAt(index);
+    await b.flush();
   }
 
   Future<void> updateAt(int index, Tarea tarea) async {
     final b = await box;
     await b.putAt(index, tarea);
+    await b.flush();
   }
 
   Future<void> dispose() async {

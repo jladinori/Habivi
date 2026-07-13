@@ -14,6 +14,7 @@ class BackupRepository {
   Future<void> add(Backup backup) async {
     final b = await box;
     await b.add(backup);
+    await b.flush();
   }
 
   Future<Map<dynamic, Backup>> readAll() async {
@@ -24,11 +25,13 @@ class BackupRepository {
   Future<void> deleteAt(int index) async {
     final b = await box;
     await b.deleteAt(index);
+    await b.flush();
   }
 
   Future<void> updateAt(int index, Backup backup) async {
     final b = await box;
     await b.putAt(index, backup);
+    await b.flush();
   }
 
   Future<void> dispose() async {

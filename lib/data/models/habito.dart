@@ -27,6 +27,10 @@ class Habito {
   @HiveField(6)
   List<String>? fechasCompletadas;
 
+  int vecesPorSemana = 7;
+
+  int get safeVecesPorSemana => vecesPorSemana;
+
   List<String> get safeFechasCompletadas => fechasCompletadas ?? [];
 
   String get aspecto {
@@ -47,11 +51,11 @@ class Habito {
   }
 
   set aspecto(String val) {
-    tipo = "${val}|${iconoKey}";
+    tipo = "$val|$iconoKey";
   }
 
   set iconoKey(String val) {
-    tipo = "${aspecto}|${val}";
+    tipo = "$aspecto|$val";
   }
 
   Habito(

@@ -67,8 +67,6 @@ class _HabitContributionBoardState extends State<HabitContributionBoard> {
                   mainAxisSize: MainAxisSize.min,
                   children: List.generate(7, (rowIndex) {
                     final dia = lunesSemana.add(Duration(days: rowIndex));
-                    final esFuturo = dia.isAfter(hoy);
-
                     final fechaStr =
                         '${dia.year}-${dia.month.toString().padLeft(2, '0')}-${dia.day.toString().padLeft(2, '0')}';
                     final completado = widget.fechasCompletadas.contains(fechaStr);
@@ -81,11 +79,11 @@ class _HabitContributionBoardState extends State<HabitContributionBoard> {
                       height: 8,
                       margin: const EdgeInsets.symmetric(vertical: 1.5),
                       decoration: BoxDecoration(
-                        color: completado ? widget.baseColor : widget.baseColor.withOpacity(0.12),
+                        color: completado ? widget.baseColor : widget.baseColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(2.0),
                         border: esHoy
                             ? Border.all(
-                                color: Colors.white.withOpacity(0.8),
+                                color: Colors.white.withValues(alpha: 0.8),
                                 width: 1.0,
                               )
                             : null,
