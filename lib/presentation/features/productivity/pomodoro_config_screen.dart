@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
-/// Pantalla de configuración de Pomodoro
-/// Permite ajustar tiempos de trabajo y descanso antes de iniciar
 class PomodoroConfigScreen extends StatefulWidget {
   const PomodoroConfigScreen({super.key});
 
@@ -10,294 +9,192 @@ class PomodoroConfigScreen extends StatefulWidget {
 }
 
 class _PomodoroConfigScreenState extends State<PomodoroConfigScreen> {
-  late int _tiempoTrabajo;
-  late int _tiempoDescanso;
+  late int tiempoTrabajo;
+  late int tiempoDescanso;
 
   @override
   void initState() {
     super.initState();
-    _tiempoTrabajo = 25;
-    _tiempoDescanso = 5;
+    tiempoTrabajo = 25;
+    tiempoDescanso = 5;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('🍅 Configurar Pomodoro'),
+        title: const Text('⚙️ Configurar sesión'),
         centerTitle: true,
         elevation: 0,
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 16),
-
-              // === ENCABEZADO ===
-              Center(
-                child: Text(
-                  'Personaliza tu sesión',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          const SizedBox(height: 16),
+          
+          // Tiempo de trabajo
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Tiempo de trabajo',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Center(
-                child: Text(
-                  'Elige cuánto tiempo dedicarás a trabajar y descansar',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.6),
+                      Text(
+                        '$tiempoTrabajo min',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
                       ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              const SizedBox(height: 40),
-
-              // === TIEMPO DE TRABAJO ===
-              Text(
-                '⏱ Tiempo de trabajo',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.1),
+                    ],
                   ),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      '$_tiempoTrabajo minutos',
-                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildQuickButton(context, '15 min', () {
-                          setState(() => _tiempoTrabajo = 15);
-                        }),
-                        _buildQuickButton(context, '20 min', () {
-                          setState(() => _tiempoTrabajo = 20);
-                        }),
-                        _buildQuickButton(context, '25 min', () {
-                          setState(() => _tiempoTrabajo = 25);
-                        }),
-                        _buildQuickButton(context, '30 min', () {
-                          setState(() => _tiempoTrabajo = 30);
-                        }),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Slider(
-                            value: _tiempoTrabajo.toDouble(),
-                            min: 5,
-                            max: 60,
-                            divisions: 55,
-                            label: '$_tiempoTrabajo',
-                            onChanged: (value) {
-                              setState(() => _tiempoTrabajo = value.toInt());
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 40),
-
-              // === TIEMPO DE DESCANSO ===
-              Text(
-                '☕ Tiempo de descanso',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.1),
+                  const SizedBox(height: 16),
+                  Slider(
+                    value: tiempoTrabajo.toDouble(),
+                    min: 5,
+                    max: 60,
+                    divisions: 11,
+                    onChanged: (value) {
+                      setState(() => tiempoTrabajo = value.toInt());
+                    },
                   ),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      '$_tiempoDescanso minutos',
-                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: Wrap(
+                      spacing: 8,
+                      children: [15, 20, 25, 30, 45].map((valor) {
+                        final isSelected = tiempoTrabajo == valor;
+                        return FilterChip(
+                          label: Text('$valor min'),
+                          selected: isSelected,
+                          onSelected: (_) {
+                            setState(() => tiempoTrabajo = valor);
+                          },
+                        );
+                      }).toList(),
                     ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildQuickButton(context, '3 min', () {
-                          setState(() => _tiempoDescanso = 3);
-                        }),
-                        _buildQuickButton(context, '5 min', () {
-                          setState(() => _tiempoDescanso = 5);
-                        }),
-                        _buildQuickButton(context, '10 min', () {
-                          setState(() => _tiempoDescanso = 10);
-                        }),
-                        _buildQuickButton(context, '15 min', () {
-                          setState(() => _tiempoDescanso = 15);
-                        }),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Slider(
-                            value: _tiempoDescanso.toDouble(),
-                            min: 1,
-                            max: 30,
-                            divisions: 29,
-                            label: '$_tiempoDescanso',
-                            onChanged: (value) {
-                              setState(() => _tiempoDescanso = value.toInt());
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 40),
-
-              // === RESUMEN ===
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
                   ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Column(
-                      children: [
-                        Text(
-                          '⏱',
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Trabajo',
-                          style: Theme.of(context).textTheme.labelSmall,
-                        ),
-                        Text(
-                          '$_tiempoTrabajo min',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      children: [
-                        Text(
-                          '☕',
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Descanso',
-                          style: Theme.of(context).textTheme.labelSmall,
-                        ),
-                        Text(
-                          '$_tiempoDescanso min',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                ],
               ),
-              const SizedBox(height: 32),
-
-              // === BOTONES ===
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: () {
-                    Navigator.pushNamed(
-                      context,
-                      '/productivity/pomodoro',
-                      arguments: {
-                        'tiempoTrabajo': _tiempoTrabajo,
-                        'tiempoDescanso': _tiempoDescanso,
-                      },
-                    );
-                  },
-                  icon: const Icon(Icons.play_arrow),
-                  label: const Text('Comenzar sesión'),
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Volver'),
-                ),
-              ),
-              const SizedBox(height: 32),
-            ],
+            ),
           ),
-        ),
-      ),
-    );
-  }
+          const SizedBox(height: 20),
 
-  Widget _buildQuickButton(BuildContext context, String label, VoidCallback onPressed) {
-    return SizedBox(
-      width: 70,
-      child: OutlinedButton(
-        onPressed: onPressed,
-        style: OutlinedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-        ),
-        child: Text(
-          label,
-          style: Theme.of(context).textTheme.labelSmall,
-          textAlign: TextAlign.center,
-        ),
+          // Tiempo de descanso
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Tiempo de descanso',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      Text(
+                        '$tiempoDescanso min',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Slider(
+                    value: tiempoDescanso.toDouble(),
+                    min: 1,
+                    max: 30,
+                    divisions: 29,
+                    onChanged: (value) {
+                      setState(() => tiempoDescanso = value.toInt());
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: Wrap(
+                      spacing: 8,
+                      children: [3, 5, 10, 15, 20].map((valor) {
+                        final isSelected = tiempoDescanso == valor;
+                        return FilterChip(
+                          label: Text('$valor min'),
+                          selected: isSelected,
+                          onSelected: (_) {
+                            setState(() => tiempoDescanso = valor);
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Resumen
+          Card(
+            color: Theme.of(context).colorScheme.primaryContainer,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Resumen',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    '⏱️  $tiempoTrabajo minutos de trabajo',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '☕ $tiempoDescanso minutos de descanso',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 32),
+
+          // Botón Comenzar sesión
+          ElevatedButton.icon(
+            onPressed: () => context.push(
+              '/productivity/pomodoro',
+              extra: {
+                'tiempoTrabajo': tiempoTrabajo,
+                'tiempoDescanso': tiempoDescanso,
+              },
+            ),
+            icon: const Icon(Icons.play_arrow),
+            label: const Text('Comenzar sesión'),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
       ),
     );
   }
