@@ -83,6 +83,32 @@ class FiftyTenInfoScreen extends StatelessWidget {
                   _buildActivityItem(context, '📚 Estudiar varias horas'),
                   _buildActivityItem(context, '✍️ Escribir'),
                   _buildActivityItem(context, '🎨 Diseñar'),
+                  _buildActivityItem(context, '📊 Proyectos largos'),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // ¿Cuándo usar esta técnica?
+          Card(
+            color: Theme.of(context).colorScheme.primaryContainer,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '💡 ¿Cuándo usar esta técnica?',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Utilízala cuando necesites mantener la concentración durante sesiones largas de trabajo o cuando quieras maximizar tu productividad sin agotarte.',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                 ],
               ),
             ),
