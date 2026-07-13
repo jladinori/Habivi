@@ -179,38 +179,30 @@ class _ProductivityScreenState extends ConsumerState<ProductivityScreen> {
   }
 
   void _abrirPantallaInfo(MetodoEstudioInfo metodo) {
-    // Navega a la pantalla informativa del método
     switch (metodo.id) {
       case 'pomodoro':
         context.push('/productivity/pomodoro-info');
         break;
       case 'feynman':
-        // TODO: Implementar FeynmanInfoScreen
-        _registrarSesion(metodo);
+        context.push('/productivity/feynman-info');
         break;
       case 'active_recall':
-        // TODO: Implementar ActiveRecallInfoScreen
-        _registrarSesion(metodo);
+        context.push('/productivity/active-recall-info');
         break;
       case 'spaced_repetition':
-        // TODO: Implementar SpacedRepetitionInfoScreen
-        _registrarSesion(metodo);
+        context.push('/productivity/spaced-repetition-info');
         break;
       case 'cornell':
-        // TODO: Implementar CornellInfoScreen
-        _registrarSesion(metodo);
+        context.push('/productivity/cornell-info');
         break;
       case 'time_blocking':
-        // TODO: Implementar TimeBlockingInfoScreen
-        _registrarSesion(metodo);
+        context.push('/productivity/time-blocking-info');
         break;
       case '50_10':
-        // TODO: Implementar 50_10InfoScreen
-        _registrarSesion(metodo);
+        context.push('/productivity/fifty-ten-info');
         break;
       case 'mind_maps':
-        // TODO: Implementar MindMapsInfoScreen
-        _registrarSesion(metodo);
+        context.push('/productivity/mind-maps-info');
         break;
       default:
         _registrarSesion(metodo);
