@@ -149,6 +149,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               data: (moodPercentage) {
                 final moodColor = HabitMoodService.getMoodColor(moodPercentage);
                 final moodPercentInt = (moodPercentage * 100).toInt();
+                
+                // Extraer el emoji del estado de ánimo (ej: "Feliz 😊" → "😊")
+                final moodStateStr = HabitMoodService.getMoodState(moodPercentage);
+                final emoji = moodStateStr.isNotEmpty ? moodStateStr.split(' ').last : '😐';
 
                 return Positioned(
                   left: 0,
@@ -193,6 +197,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                           child: Row(
                             children: [
+                              // === EMOJI DEL ESTADO DE IVY (IZQUIERDA) ===
+                              Text(
+                                emoji,
+                                style: const TextStyle(fontSize: 20),
+                              ),
+                              const SizedBox(width: 12),
+                              
                               Expanded(
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(6),
