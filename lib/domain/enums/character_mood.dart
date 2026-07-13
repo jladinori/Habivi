@@ -3,6 +3,8 @@ enum CharacterMood {
   feliz,
   neutral,
   triste,
+  frustrado,
+  sinEnergia,
 }
 
 extension CharacterMoodLabel on CharacterMood {
@@ -10,5 +12,7 @@ extension CharacterMoodLabel on CharacterMood {
         CharacterMood.feliz => 'Feliz',
         CharacterMood.neutral => 'Neutral',
         CharacterMood.triste => 'Triste',
+        CharacterMood.frustrado => 'Frustrado',
+        CharacterMood.sinEnergia => 'Sin energía',
       };
 }
