@@ -80,9 +80,35 @@ class MindMapsInfoScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   _buildActivityItem(context, '📚 Estudiar'),
+                  _buildActivityItem(context, '🧠 Organizar ideas'),
                   _buildActivityItem(context, '📋 Planificar proyectos'),
                   _buildActivityItem(context, '🎤 Preparar exposiciones'),
                   _buildActivityItem(context, '💡 Lluvia de ideas'),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // ¿Cuándo usar esta técnica?
+          Card(
+            color: Theme.of(context).colorScheme.primaryContainer,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '💡 ¿Cuándo usar esta técnica?',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Utilízala cuando necesites organizar y comprender mejor la información mediante representaciones visuales o cuando quieras conectar conceptos de forma creativa.',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                 ],
               ),
             ),
