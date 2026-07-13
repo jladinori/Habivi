@@ -12,7 +12,7 @@ void main() async {
       child: _AppLifecycleWrapper(
         child: HabiviApp(),
       ),
-    ),
+      ),
   );
 }
 

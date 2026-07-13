@@ -21,10 +21,10 @@ class UsuarioAdapter extends TypeAdapter<Usuario> {
       nombre: fields[1] as String,
       apellido: fields[2] as String,
       energia: fields[3] as int,
-      energiaMax: fields[4] as int? ?? 100,
-      puntosProductividad: fields[5] as int? ?? 0,
-      estadoPersonaje: fields[6] as String? ?? 'neutral',
-      fechaInicio: fields[7] as String? ?? DateTime.now().toIso8601String(),
+      energiaMax: fields[4] as int,
+      puntosProductividad: fields[5] as int,
+      estadoPersonaje: fields[6] as String,
+      fechaInicio: fields[7] as String,
     );
   }
 

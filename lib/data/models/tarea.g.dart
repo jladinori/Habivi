@@ -20,10 +20,10 @@ class TareaAdapter extends TypeAdapter<Tarea> {
       fields[0] as int,
       fields[1] as String,
       fields[2] as int,
-      metadata: fields[3] as String? ?? '',
-      fecha: fields[4] as String? ?? '',
-      notas: fields[5] as String? ?? '',
-      completada: fields[6] as bool? ?? false,
+      metadata: fields[3] as String,
+      fecha: fields[4] as String,
+      notas: fields[5] as String,
+      completada: fields[6] as bool,
     );
   }
 

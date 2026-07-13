@@ -21,9 +21,9 @@ class HabitoAdapter extends TypeAdapter<Habito> {
       fields[1] as String,
       fields[2] as String,
       fields[3] as String,
-      completadoHoy: fields[4] as bool? ?? false,
-      fechaUltimoCompletado: fields[5] as String? ?? '',
-      fechasCompletadas: (fields[6] as List?)?.cast<String>() ?? [],
+      completadoHoy: fields[4] as bool,
+      fechaUltimoCompletado: fields[5] as String,
+      fechasCompletadas: (fields[6] as List?)?.cast<String>(),
       vecesPorSemana: fields[7] as int?,
       fechaCreacion: fields[8] as String?,
     );
