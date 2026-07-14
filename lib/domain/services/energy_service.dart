@@ -84,12 +84,10 @@ class EnergyService {
     }
 
     int energy = maxEnergy;
-
     if (lastActivityDate != null) {
       final daysInactive = _daysSince(lastActivityDate);
       energy -= daysInactive * dailyDecay;
     }
-
     energy += totalCompletionsToday * energyPerHabit;
 
     return energy.clamp(0, maxEnergy);

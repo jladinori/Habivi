@@ -23,9 +23,12 @@ extension CharacterMoodInfo on CharacterMood {
         CharacterMood.feliz => '¡Vamos genial! Sigue así 💪',
         CharacterMood.frustrado =>
             'Estás dando mucho en un solo aspecto. ¡Equilibra cuerpo, mente y alma!',
-        CharacterMood.sonoliento => 'Vamos bien, pero hoy puedes dar un pasito más.',
-        CharacterMood.apagado => 'Ivi te extraña... completa un hábito para despertarlo.',
-        CharacterMood.triste => 'Energía baja. Un hábito pequeño puede cambiar el día.',
+        CharacterMood.sonoliento =>
+            'Vamos bien, pero hoy puedes dar un pasito más.',
+        CharacterMood.apagado =>
+            'Ivi te extraña... completa un hábito para despertarlo.',
+        CharacterMood.triste =>
+            'Energía baja. Un hábito pequeño puede cambiar el día.',
         CharacterMood.sinEnergia => 'Sin energía. Descansa y vuelve mañana.',
       };
 
