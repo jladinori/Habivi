@@ -15,31 +15,76 @@ class RachaIndicator extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          // === RACHA SEMANAL (Izquierda) ===
           SizedBox(
             width: 100,
             child: weeklyRachaAsync.when(
-              loading: () => _buildRachaSquare(emoji: '🔥', label: 'Semanas', value: '–', color: Colors.purple),
-              error: (_, __) => _buildRachaSquare(emoji: '🔥', label: 'Semanas', value: '0', color: Colors.purple),
-              data: (racha) => _buildRachaSquare(
+              loading: () => _buildRachaSquare(
                 emoji: '🔥',
                 label: 'Semanas',
-                value: '${racha?.cantidad ?? 0}',
-                color: (racha?.enRiesgo ?? false) ? Colors.grey : Colors.purple,
+                value: '–',
+                color: Colors.purple,
               ),
+              error: (_, __) => _buildRachaSquare(
+                emoji: '🔥',
+                label: 'Semanas',
+                value: '0',
+                color: Colors.purple,
+              ),
+              data: (racha) {
+                if (racha == null) {
+                  return _buildRachaSquare(
+                    emoji: '🔥',
+                    label: 'Semanas',
+                    value: '0',
+                    color: Colors.purple,
+                  );
+                }
+                return _buildRachaSquare(
+                  emoji: '🔥',
+                  label: 'Semanas',
+                  value: '${racha.cantidad}',
+                  color: racha.enRiesgo ? Colors.grey : Colors.purple,
+                );
+              },
             ),
           ),
+          
+          // === ESPACIO EN MEDIO ===
           const Spacer(),
+          
+          // === RACHA DIARIA (Derecha) ===
           SizedBox(
             width: 100,
             child: dailyRachaAsync.when(
-              loading: () => _buildRachaSquare(emoji: '🔥', label: 'Días', value: '–', color: Colors.red),
-              error: (_, __) => _buildRachaSquare(emoji: '🔥', label: 'Días', value: '0', color: Colors.red),
-              data: (racha) => _buildRachaSquare(
+              loading: () => _buildRachaSquare(
                 emoji: '🔥',
                 label: 'Días',
-                value: '${racha?.cantidad ?? 0}',
+                value: '–',
                 color: Colors.red,
               ),
+              error: (_, __) => _buildRachaSquare(
+                emoji: '🔥',
+                label: 'Días',
+                value: '0',
+                color: Colors.red,
+              ),
+              data: (racha) {
+                if (racha == null) {
+                  return _buildRachaSquare(
+                    emoji: '🔥',
+                    label: 'Días',
+                    value: '0',
+                    color: Colors.red,
+                  );
+                }
+                return _buildRachaSquare(
+                  emoji: '🔥',
+                  label: 'Días',
+                  value: '${racha.cantidad}',
+                  color: Colors.red,
+                );
+              },
             ),
           ),
         ],
@@ -47,19 +92,45 @@ class RachaIndicator extends ConsumerWidget {
     );
   }
 
-  Widget _buildRachaSquare({required String emoji, required String label, required String value, required Color color}) {
+  /// Construye un cuadrado de racha con emoji, etiqueta y número - COMPLETAMENTE RELLENO DE COLOR
+  Widget _buildRachaSquare({
+    required String emoji,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.85), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.85), // Relleno completo del color
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 20)),
+          Text(
+            emoji,
+            style: const TextStyle(fontSize: 20),
+          ),
           const SizedBox(height: 4),
-          Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(label, style: TextStyle(fontSize: 10, color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w500)),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              color: Colors.white.withValues(alpha: 0.9),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );

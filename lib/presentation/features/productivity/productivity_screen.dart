@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:habivi/data/repositories/estudio_repository.dart';
+import 'package:habivi/data/repositories/user_repository.dart';
 import 'package:habivi/data/models/sesion_estudio.dart';
 import 'package:habivi/domain/services/puntos_estudio_service.dart';
 
@@ -53,9 +54,20 @@ class _ProductivityScreenState extends ConsumerState<ProductivityScreen> {
           _isLoading = false;
         });
       }
+      await _syncPuntosProductividad(puntosTotales);
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _syncPuntosProductividad(int puntosTotales) async {
+    final userRepo = UserRepository();
+    final usuarios = await userRepo.readAll();
+    if (usuarios.isEmpty) return;
+    final firstKey = usuarios.keys.first;
+    final usuario = usuarios.values.first;
+    usuario.puntosProductividad = puntosTotales;
+    await userRepo.updateAt(firstKey, usuario);
   }
 
   Future<void> _registrarSesion(MetodoEstudioInfo metodo) async {
@@ -148,6 +160,7 @@ class _ProductivityScreenState extends ConsumerState<ProductivityScreen> {
       );
       await _repository.add(sesion);
       await _cargarDatos();
+      await _syncPuntosProductividad(_puntosTotales);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

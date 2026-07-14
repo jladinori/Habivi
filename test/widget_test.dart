@@ -12,11 +12,43 @@ import 'package:habivi/data/models/tarea.dart';
 import 'package:habivi/data/models/logro.dart';
 import 'package:habivi/data/models/sesion_estudio.dart';
 import 'package:habivi/data/models/usuario.dart';
+import 'package:video_player_platform_interface/video_player_platform_interface.dart';
+
+class _FakeVideoPlayerPlatform extends VideoPlayerPlatform {
+  @override
+  Future<void> init() async {}
+
+  @override
+  Future<int?> create(DataSource dataSource) async => null;
+
+  @override
+  Future<void> dispose(int textureId) async {}
+
+  @override
+  Future<void> play(int textureId) async {}
+
+  @override
+  Future<void> pause(int textureId) async {}
+
+  @override
+  Future<void> setLooping(int textureId, bool looping) async {}
+
+  @override
+  Future<void> setVolume(int textureId, double volume) async {}
+
+  @override
+  Stream<VideoEvent> videoEventsFor(int textureId) =>
+      const Stream.empty();
+
+  @override
+  Future<void> setMixWithOthers(bool mixWithOthers) async {}
+}
 
 void main() {
   late Directory tempDir;
 
   setUpAll(() async {
+    VideoPlayerPlatform.instance = _FakeVideoPlayerPlatform();
     tempDir = Directory.systemTemp.createTempSync('habivi_widget_test');
     await HiveInitializer.initForTesting(tempDir.path);
     await Hive.openBox<Usuario>(HiveBoxNames.usuario);
@@ -34,7 +66,7 @@ void main() {
     }
   });
 
-  testWidgets('HabiviApp muestra titulo y pestañas', (tester) async {
+  testWidgets('HabiviApp muestra titulo', (tester) async {
     await tester.pumpWidget(
       const ProviderScope(
         child: HabiviApp(),

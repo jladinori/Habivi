@@ -1,0 +1,68 @@
+% Recuadro explicativo — Diseño de BD Hive (Habivi)
+% Compilar con: pdflatex -shell-escape archivo.tex
+\documentclass[11pt]{article}
+\usepackage[landscape, margin=1.2cm]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{booktabs, array, xcolor, colortbl, multirow}
+\usepackage[many]{tcolorbox}
+\usepackage{hyperref}
+
+\definecolor{cbg}{HTML}{1a1a2e}
+\definecolor{cframe}{HTML}{16213e}
+\definecolor{chead}{HTML}{0f3460}
+\definecolor{cacc}{HTML}{e94560}
+\definecolor{ctext}{HTML}{eaeaea}
+
+\pagecolor{cbg}\color{ctext}
+
+\begin{document}
+\centering
+
+\begin{tcolorbox}[
+  width=\textwidth,
+  colback=cframe,
+  colframe=cacc,
+  arc=6pt,
+  title={\huge \textbf{Habivi}~~---~~Diseño de Base de Datos Local (Hive)},
+  fonttitle=\color{white}\bfseries\large,
+  left=8pt, right=8pt, top=6pt, bottom=6pt
+]
+
+\rowcolors{2}{cframe!80}{cframe!60}
+\small
+\begin{tabular}{ccllc}
+\toprule
+\rowcolor{chead}
+\textbf{typeId} & \textbf{Caja} & \textbf{Modelo} & \textbf{Adapter} & \textbf{Campos} \\
+\midrule
+0  & usuarioBox      & Usuario        & auto       & idUsuario, nombre, apellido, energia, energiaMax, puntosProductividad, estadoPersonaje, fechaInicio \\
+1  & cuentaBox       & Cuenta         & auto       & idUsuario, nickname, contrasena, correo, telefono \\
+2  & habitoBox       & Habito         & auto       & idHabito, nombreHabito, atributo, tipo, completadoHoy, fechaUltimoCompletado, fechasCompletadas, vecesPorSemana, fechaCreacion \\
+3  & registroHabitoBox & RegistroHabito & auto     & idRegistro, fecha, completado, impacto \\
+4  & tareaBox        & Tarea          & auto       & idTarea, nombreTarea, puntaje, metadata, fecha, notas, completada \\
+5  & sesionPomodoroBox & SesionPomodoro & auto     & idSesion, fechaInicio, fechaFinal, duracion, completada, tipoSesion \\
+6  & notaBox         & Nota           & auto       & idNota, valor \\
+7  & eventoBox       & Evento         & auto       & idEvento, fechaEvento, finalizado \\
+8  & backupBox       & Backup         & auto       & idBackup, fechaBackup, descripcion \\
+9  & sesionEstudioBox & SesionEstudio  & manual     & idSesion, metodo, duracionMinutos, puntosObtenidos, fecha, nota \\
+10 & logroBox        & Logro          & manual     & idLogro, fechaDesbloqueo \\
+11 & rachaBox        & Racha          & manual     & idRacha, tipo, cantidad, fechaUltimoCompletado, enRiesgo, fechaInicioPeriodoRecuperacion, fechaCreacion \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.3cm}
+{\footnotesize
+\textbf{Notas:} Adaptadores auto-generados con \texttt{hive\_generator} (\texttt{part '*.g.dart'}).\\
+Los manuales incluyen la clase adapter inline en el mismo archivo.\\
+Todas las fechas se almacenan como \texttt{String} en formato ISO \texttt{yyyy-MM-dd}.\\
+\texttt{flush()} tras cada escritura; Hive se cierra solo en estado \texttt{detached}.
+}
+
+\end{tcolorbox}
+
+\vspace{0.15cm}
+{\tiny\color{gray}Código fuente: \url{https://github.com/jladinori/Habivi}}
+
+\end{document}

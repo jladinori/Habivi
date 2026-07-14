@@ -1,0 +1,291 @@
+% =============================================================================
+%  Habivi — Diseño de Base de Datos (Hive)
+%  Diapositiva horizontal para Overleaf (beamer, landscape)
+% =============================================================================
+\documentclass[11pt,landscape]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{colortbl}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,positioning,fit}
+
+% ---- Tema minimalista oscuro ----
+\setbeamercolor{background canvas}{bg=black!90}
+\setbeamercolor{normal text}{fg=white}
+\setbeamercolor{frametitle}{fg=white}
+\setbeamercolor{title}{fg=white}
+\setbeamercolor{structure}{fg=cyan!70}
+\setbeamercolor{alerted text}{fg=orange}
+\setbeamercolor{footline}{fg=gray}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{frametitle}{\vspace{0.3cm}\insertframetitle\par}
+
+\title{\textbf{\Huge Habivi}}
+\subtitle{\large Diseño de Base de Datos Local --- Hive}
+\author{Arquitectura de Software}
+\date{}
+
+\begin{document}
+
+% ---- Portada ----
+\begin{frame}
+  \titlepage
+  \vfill
+  \centering
+  {\small \color{gray} App de productividad personal con gamificación}
+\end{frame}
+
+% ---- Slide 1: Visión general ----
+\begin{frame}{Visión General}
+  \textbf{¿Por qué Hive?}
+  \begin{itemize}
+    \item Base de datos NoSQL clave--valor, \alert{100\,\% local} (sin servidor)
+    \item Sin reflectividad ni código nativo pesado (ideal para Flutter)
+    \item Escritura ultra rápida en memoria + persistencia asíncrona
+    \item \texttt{localStorage} en web; archivos binarios en móvil/desktop
+  \end{itemize}
+
+  \vspace{0.4cm}
+  \textbf{Principios de diseño}
+  \begin{enumerate}
+    \item Una \alert{caja} por entidad, 12 cajas en total
+    \item \texttt{typeId} fijo (0–11) para compatibilidad hacia atrás
+    \item \texttt{flush()} tras cada escritura (create, update, delete)
+    \item Cierre de Hive solo en \texttt{AppLifecycleState.detached}
+  \end{enumerate}
+\end{frame}
+
+% ---- Slide 2: Tabla resumen ----
+\begin{frame}{Entidades y Cajas}
+  \centering
+  \rowcolors{2}{black!75}{black!60}
+  \begin{tabular}{ccllc}
+    \toprule
+    \rowcolor{black!45}
+    \textbf{typeId} & \textbf{Caja} & \textbf{Modelo} & \textbf{Adapter} & \textbf{Campos} \\
+    \midrule
+    0  & usuarioBox      & Usuario        & auto       & 8 \\
+    1  & cuentaBox       & Cuenta         & auto       & 5 \\
+    2  & habitoBox       & Habito         & auto       & 9 \\
+    3  & registroHabitoBox & RegistroHabito & auto     & 4 \\
+    4  & tareaBox        & Tarea          & auto       & 7 \\
+    5  & sesionPomodoroBox & SesionPomodoro & auto     & 6 \\
+    6  & notaBox         & Nota           & auto       & 2 \\
+    7  & eventoBox       & Evento         & auto       & 3 \\
+    8  & backupBox       & Backup         & auto       & 3 \\
+    9  & sesionEstudioBox & SesionEstudio  & \alert{manual} & 6 \\
+    10 & logroBox        & Logro          & \alert{manual} & 2 \\
+    11 & rachaBox        & Racha          & \alert{manual} & 7 \\
+    \bottomrule
+  \end{tabular}
+\end{frame}
+
+% ---- Slide 3: Diagrama entidad-relación conceptual ----
+\begin{frame}{Diagrama de Entidades}
+  \centering
+  \begin{tikzpicture}[
+    box/.style={rectangle, rounded corners, draw=cyan!60, fill=cyan!15,
+                minimum width=4.2cm, minimum height=0.7cm, font=\small},
+    rel/.style={-latex, draw=orange!70, thick},
+    every node/.style={font=\footnotesize}
+  ]
+
+    % Fila superior: Usuario + Cuenta
+    \node[box] (usr) {Usuario (idUsuario*)};
+    \node[box, right=1.2cm of usr] (cta) {Cuenta (idUsuario*)};
+
+    % Fila 2: Hábitos y tareas
+    \node[box, below=0.9cm of usr] (hab) {Hábito};
+    \node[box, right=1.2cm of hab] (reg) {RegistroHábito};
+    \node[box, below=0.9cm of hab] (tar) {Tarea};
+
+    % Fila 3: Sesiones
+    \node[box, right=1.2cm of tar] (pom) {SesiónPomodoro};
+    \node[box, below=0.9cm of tar] (est) {SesiónEstudio};
+
+    % Fila 4: Notas, Eventos, Backup
+    \node[box, right=1.2cm of est] (nota) {Nota};
+    \node[box, below=0.9cm of est] (evt) {Evento};
+    \node[box, right=1.2cm of evt] (bkp) {Backup};
+
+    % Fila 5: Logros y Rachas
+    \node[box, below=0.9cm of evt] (log) {Logro};
+    \node[box, right=1.2cm of log] (rch) {Racha};
+
+    % Relaciones conceptuales
+    \draw[rel] (usr) -- (cta);
+    \draw[rel, dashed] (usr) |- (hab);
+    \draw[rel, dashed] (hab) -- (reg);
+    \draw[rel, dashed] (usr) |- (tar);
+    \draw[rel, dashed] (usr) |- (est);
+    \draw[rel, dashed] (usr) |- (log);
+    \draw[rel, dashed] (usr) |- (rch);
+
+    % Nota al pie
+    \node[below=0.2cm of rch, xshift=-2.5cm, text width=10cm, align=center,
+          font=\tiny\color{gray}] {
+      * Relaciones conceptuales — Hive no impone claves foráneas. \\
+      Las relaciones se resuelven en código (repositorios y servicios).
+    };
+  \end{tikzpicture}
+\end{frame}
+
+% ---- Slide 4: Detalle de campos ----
+\begin{frame}{Campos por Entidad (I)}
+  \centering
+  \rowcolors{2}{black!75}{black!60}
+  \begin{tabular}{clll}
+    \toprule
+    \rowcolor{black!45}
+    \textbf{Modelo} & \textbf{Campo} & \textbf{Tipo} & \textbf{Descripción} \\
+    \midrule
+    \multirow{8}{*}{Usuario} & idUsuario & int & ID único \\
+     & nombre & String & \\
+     & apellido & String & \\
+     & energia & int & Energía actual (0--100) \\
+     & energiaMax & int & Máxima energía \\
+     & puntosProductividad & int & Puntos acumulados \\
+     & estadoPersonaje & String & Estado del personaje \\
+     & fechaInicio & String & Fecha de registro \\
+    \midrule
+    \multirow{5}{*}{Cuenta} & idUsuario & int & FK conceptual \\
+     & nickname & String & \\
+     & contrasena & String & \\
+     & correo & String & \\
+     & telefono & int & \\
+    \midrule
+    \multirow{9}{*}{Hábito} & idHabito & int & \\
+     & nombreHabito & String & \\
+     & atributo & String & \\
+     & tipo & String & ``aspecto|iconoKey'' \\
+     & completadoHoy & bool & \\
+     & fechaUltimoCompletado & String & \\
+     & fechasCompletadas & List<String> & Historial \\
+     & vecesPorSemana & int? & Frecuencia objetivo \\
+     & fechaCreacion & String? & \\
+    \bottomrule
+  \end{tabular}
+\end{frame}
+
+\begin{frame}{Campos por Entidad (y II)}
+  \centering
+  \rowcolors{2}{black!75}{black!60}
+  \begin{tabular}{clll}
+    \toprule
+    \rowcolor{black!45}
+    \textbf{Modelo} & \textbf{Campo} & \textbf{Tipo} & \textbf{Descripción} \\
+    \midrule
+    \multirow{4}{*}{RegistroHábito} & idRegistro & int & \\
+     & fecha & String & \\
+     & completado & bool & \\
+     & impacto & int & \\
+    \midrule
+    \multirow{7}{*}{Tarea} & idTarea & int & \\
+     & nombreTarea & String & \\
+     & puntaje & int & \\
+     & metadata & String & Legado ``|fecha|notas'' \\
+     & fecha & String & \\
+     & notas & String & \\
+     & completada & bool & \\
+    \midrule
+    \multirow{6}{*}{SesiónPomodoro} & idSesion & int & \\
+     & fechaInicio & String & \\
+     & fechaFinal & String & \\
+     & duracion & int & Minutos \\
+     & completada & bool & \\
+     & tipoSesion & String & pomodoro / descanso \\
+    \midrule
+    \multirow{2}{*}{Nota} & idNota & int & \\
+     & valor & String & Contenido \\
+    \bottomrule
+  \end{tabular}
+\end{frame}
+
+\begin{frame}{Campos por Entidad (y III)}
+  \centering
+  \rowcolors{2}{black!75}{black!60}
+  \begin{tabular}{clll}
+    \toprule
+    \rowcolor{black!45}
+    \textbf{Modelo} & \textbf{Campo} & \textbf{Tipo} & \textbf{Descripción} \\
+    \midrule
+    \multirow{3}{*}{Evento} & idEvento & int & \\
+     & fechaEvento & String & \\
+     & finalizado & bool & \\
+    \midrule
+    \multirow{3}{*}{Backup} & idBackup & int & \\
+     & fechaBackup & String & \\
+     & descripcion & String & \\
+    \midrule
+    \multirow{6}{*}{SesiónEstudio} & idSesion & int & \\
+     & metodo & String & pomodoro, feynman, etc. \\
+     & duracionMinutos & int & \\
+     & puntosObtenidos & int & \\
+     & fecha & String & \\
+     & nota & String & \\
+    \midrule
+    \multirow{2}{*}{Logro} & idLogro & String & Clave del logro \\
+     & fechaDesbloqueo & String & \\
+    \midrule
+    \multirow{7}{*}{Racha} & idRacha & int & \\
+     & tipo & String & diaria / semanal \\
+     & cantidad & int & Días o semanas \\
+     & fechaUltimoCompletado & String & \\
+     & enRiesgo & bool & Solo semanal \\
+     & fechaInicioPeriodoRecuperacion & String & \\
+     & fechaCreacion & String? & \\
+    \bottomrule
+  \end{tabular}
+\end{frame}
+
+% ---- Slide 5: Estrategia de persistencia ----
+\begin{frame}{Estrategia de Persistencia}
+  \textbf{Escritura inmediata}
+  \begin{itemize}
+    \item Cada repositorio llama a \texttt{box.flush()} tras \texttt{add},
+          \texttt{put}, \texttt{delete} y \texttt{clear}
+    \item Garantiza que los datos sobrevivan incluso si la app se cierra
+          abruptamente
+  \end{itemize}
+
+  \vspace{0.3cm}
+  \textbf{Ciclo de vida}
+  \begin{itemize}
+    \item \texttt{main.dart}: \texttt{AppDatabase.initialize()} abre las 12 cajas
+    \item \texttt{\_AppLifecycleWrapper}: cierra Hive solo en
+          \texttt{AppLifecycleState.detached} (no en \texttt{paused})
+    \item En web: se fuerza puerto \texttt{5000} para que
+          \texttt{localStorage} (por origen) sea consistente entre ejecuciones
+  \end{itemize}
+
+  \vspace{0.3cm}
+  \textbf{Manejo de versiones}
+  \begin{itemize}
+    \item \texttt{typeId} fijo: cada modelo tiene un ID de adaptador
+          permanente (0--11)
+    \item Nuevos campos: se añaden al final con el siguiente \texttt{HiveField}
+          (ej. Habito saltó de 7 a 9 campos)
+    \item Adapters manuales (SesionEstudio, Logro, Racha): control total sobre
+          serialización, sin dependencia de generación de código
+  \end{itemize}
+\end{frame}
+
+% ---- Slide final ----
+\begin{frame}{}
+
+  \vfill
+  \centering
+  {\Huge \textbf{Gracias}}
+  \vspace{0.5cm}
+
+  {\large \url{https://github.com/jladinori/Habivi}}
+  \vfill
+
+\end{frame}
+
+\end{document}
