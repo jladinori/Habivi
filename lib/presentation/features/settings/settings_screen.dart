@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:habivi/data/repositories/user_repository.dart';
 import 'package:habivi/data/models/usuario.dart';
+import 'package:habivi/presentation/providers/theme_provider.dart';
 
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   late UserRepository _userRepo;
   Usuario? _usuario;
   final _nombreController = TextEditingController();
@@ -91,6 +93,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeMode = ref.watch(themeModeProvider);
+    final isDark = themeMode == ThemeMode.dark;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Configuración'),
@@ -149,6 +154,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                 ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: SwitchListTile(
+                secondary: Icon(
+                  isDark ? Icons.dark_mode : Icons.light_mode,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                title: const Text('Modo oscuro'),
+                subtitle: Text(isDark ? 'Tema oscuro activado' : 'Tema claro activado'),
+                value: isDark,
+                onChanged: (_) => ref.read(themeModeProvider.notifier).toggle(),
               ),
             ),
           ),
@@ -221,7 +242,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Text(
               'Habivi v1.0.0',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.3),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.3),
                   ),
             ),
           ),

@@ -324,7 +324,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                         width: 1.5,
                       ),
                     ),
-                    child: Icon(icon, color: Colors.white),
+                    child: Icon(icon, color: Theme.of(context).colorScheme.onSurface),
                   ),
                 );
               },
@@ -512,6 +512,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -610,10 +611,10 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                                             children: [
                                               Text(
                                                 habito.nombreHabito,
-                                                style: const TextStyle(
+                                                style: TextStyle(
                                                   fontSize: 16,
                                                   fontWeight: FontWeight.bold,
-                                                  color: Colors.white,
+                                                  color: cs.onSurface,
                                                 ),
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
@@ -625,7 +626,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                                                     : 'Cada día cuenta para mejorar.',
                                                 style: TextStyle(
                                                   fontSize: 12,
-                                                  color: Colors.white
+                                                  color: cs.onSurface
                                                       .withValues(alpha: 0.5),
                                                 ),
                                                 maxLines: 1,
@@ -636,7 +637,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                                                 'Repite ${habito.safeVecesPorSemana} veces/semana',
                                                 style: TextStyle(
                                                   fontSize: 12,
-                                                  color: Colors.white
+                                                  color: cs.onSurface
                                                       .withValues(alpha: 0.55),
                                                 ),
                                               ),
@@ -655,14 +656,14 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                                             decoration: BoxDecoration(
                                               color: habito.completadoHoy
                                                   ? color
-                                                  : Colors.white
+                                                  : cs.onSurface
                                                       .withValues(alpha: 0.05),
                                               borderRadius:
                                                   BorderRadius.circular(10),
                                               border: Border.all(
                                                 color: habito.completadoHoy
                                                     ? Colors.transparent
-                                                    : Colors.white.withValues(
+                                                    : cs.onSurface.withValues(
                                                         alpha: 0.15),
                                                 width: 1.5,
                                               ),
@@ -671,8 +672,8 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                                               Icons.check,
                                               color: habito.completadoHoy
                                                   ? Colors.white
-                                                  : Colors.white
-                                                      .withValues(alpha: 0.15),
+                                                  : cs.onSurface
+                                                      .withValues(alpha: 0.05),
                                               size: 24,
                                             ),
                                           ),
@@ -688,7 +689,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                                           'Frecuencia: ${habito.safeVecesPorSemana}/sem',
                                           style: TextStyle(
                                             fontSize: 12,
-                                            color: Colors.white
+                                            color: cs.onSurface
                                                 .withValues(alpha: 0.55),
                                           ),
                                         ),
@@ -700,7 +701,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                                               const Icon(Icons.edit, size: 16),
                                           label: const Text('Editar'),
                                           style: TextButton.styleFrom(
-                                            foregroundColor: Colors.white
+                                            foregroundColor: cs.onSurface
                                                 .withValues(alpha: 0.75),
                                             visualDensity:
                                                 VisualDensity.compact,
