@@ -9,6 +9,7 @@ import 'package:habivi/presentation/features/home/home_screen.dart';
 import 'package:habivi/presentation/features/auth/login_screen.dart';
 import 'package:habivi/presentation/features/notes/notes_screen.dart';
 import 'package:habivi/presentation/features/settings/settings_screen.dart';
+import 'package:habivi/presentation/features/settings/data_screen.dart';
 import 'package:habivi/presentation/features/productivity/productivity_screen.dart';
 import 'package:habivi/presentation/features/productivity/pomodoro_screen.dart';
 import 'package:habivi/presentation/shell/main_shell.dart';
@@ -108,6 +109,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: 'login',
             parentNavigatorKey: _rootNavigatorKey,
             pageBuilder: (context, state) => _slideTransition(context, state, const LoginScreen()),
+          ),
+          GoRoute(
+            path: 'data',
+            parentNavigatorKey: _rootNavigatorKey,
+            pageBuilder: (context, state) => _slideTransition(context, state, const DataSettingsScreen()),
           ),
         ],
       ),

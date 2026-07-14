@@ -177,6 +177,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           Card(
             child: ListTile(
               leading: Icon(
+                Icons.storage_outlined,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              title: const Text('Datos'),
+              subtitle: const Text('Respaldar, restaurar y exportar datos'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/settings/data'),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Card(
+            child: ListTile(
+              leading: Icon(
                 Icons.login,
                 color: Theme.of(context).colorScheme.primary,
               ),
