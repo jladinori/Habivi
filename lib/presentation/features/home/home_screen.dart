@@ -5,7 +5,8 @@ import 'package:video_player/video_player.dart';
 import 'package:habivi/data/repositories/user_repository.dart';
 import 'package:habivi/domain/services/habit_mood_service.dart';
 import 'package:habivi/presentation/providers/mood_provider.dart';
-import 'package:habivi/presentation/shared/widgets/racha_widget.dart';
+// import 'package:habivi/presentation/shared/widgets/racha_widget.dart';
+import 'package:habivi/presentation/shared/widgets/principal_screen_widget.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -141,100 +142,103 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
             ),
-
+            // === CONTENIDO PRINCIPAL: Pantalla principal encima del video (widget diseño) ===
+          const HomeInfoPanel(), // Este es el widget que contiene el contenido principal de la pantalla de inicio
+          
+          //Codigo pasadao de barra de energia y rachas, pero no se implemento por el momento
             // === OVERLAY: Barra de energía con rachas encima ===
-            moodAsync.when(
-              loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
-              data: (moodPercentage) {
-                final moodColor = HabitMoodService.getMoodColor(moodPercentage);
-                final moodPercentInt = (moodPercentage * 100).toInt();
+            // moodAsync.when(
+            //   loading: () => const SizedBox.shrink(),
+            //   error: (_, __) => const SizedBox.shrink(),
+            //   data: (moodPercentage) {
+            //     final moodColor = HabitMoodService.getMoodColor(moodPercentage);
+            //     final moodPercentInt = (moodPercentage * 100).toInt();
                 
-                // Extraer el emoji del estado de ánimo (ej: "Feliz 😊" → "😊")
-                final moodStateStr = HabitMoodService.getMoodState(moodPercentage);
-                final emoji = moodStateStr.isNotEmpty ? moodStateStr.split(' ').last : '😐';
+            //     // Extraer el emoji del estado de ánimo (ej: "Feliz 😊" → "😊")
+            //     final moodStateStr = HabitMoodService.getMoodState(moodPercentage);
+            //     final emoji = moodStateStr.isNotEmpty ? moodStateStr.split(' ').last : '😐';
 
-                return Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withValues(alpha: 0.4),
-                          Colors.black.withValues(alpha: 0.8),
-                        ],
-                        stops: const [0.0, 0.3, 1.0],
-                      ),
-                    ),
-                    padding: const EdgeInsets.fromLTRB(16, 40, 16, 24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // === RACHAS ENCIMA DE LA BARRA ===
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: const RachaIndicator(),
-                        ),
+            //     return Positioned(
+            //       left: 0,
+            //       right: 0,
+            //       bottom: 0,
+            //       child: Container(
+            //         decoration: BoxDecoration(
+            //           gradient: LinearGradient(
+            //             begin: Alignment.topCenter,
+            //             end: Alignment.bottomCenter,
+            //             colors: [
+            //               Colors.transparent,
+            //               Colors.black.withValues(alpha: 0.4),
+            //               Colors.black.withValues(alpha: 0.8),
+            //             ],
+            //             stops: const [0.0, 0.3, 1.0],
+            //           ),
+            //         ),
+            //         padding: const EdgeInsets.fromLTRB(16, 40, 16, 24),
+            //         child: Column(
+            //           mainAxisSize: MainAxisSize.min,
+            //           children: [
+            //             // === RACHAS ENCIMA DE LA BARRA ===
+            //             Padding(
+            //               padding: const EdgeInsets.only(bottom: 16),
+            //               child: const RachaIndicator(),
+            //             ),
                         
-                        // Barra de estado compacta
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.35),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: moodColor.withValues(alpha: 0.3),
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              // === EMOJI DEL ESTADO DE IVY (IZQUIERDA) ===
-                              Text(
-                                emoji,
-                                style: const TextStyle(fontSize: 20),
-                              ),
-                              const SizedBox(width: 12),
+            //             // Barra de estado compacta
+            //             Container(
+            //               padding: const EdgeInsets.symmetric(
+            //                 horizontal: 16,
+            //                 vertical: 10,
+            //               ),
+          //                 decoration: BoxDecoration(
+          //                   color: Colors.black.withValues(alpha: 0.35),
+          //                   borderRadius: BorderRadius.circular(16),
+          //                   border: Border.all(
+          //                     color: moodColor.withValues(alpha: 0.3),
+          //                     width: 1,
+          //                   ),
+          //                 ),
+          //                 child: Row(
+          //                   children: [
+          //                     // === EMOJI DEL ESTADO DE IVY (IZQUIERDA) ===
+          //                     Text(
+          //                       emoji,
+          //                       style: const TextStyle(fontSize: 20),
+          //                     ),
+          //                     const SizedBox(width: 12),
                               
-                              Expanded(
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(6),
-                                  child: LinearProgressIndicator(
-                                    value: moodPercentage,
-                                    backgroundColor:
-                                        Colors.white.withValues(alpha: 0.1),
-                                    valueColor:
-                                        AlwaysStoppedAnimation(moodColor),
-                                    minHeight: 8,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Text(
-                                '$moodPercentInt%',
-                                style: TextStyle(
-                                  color: moodColor,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
+          //                     Expanded(
+          //                       child: ClipRRect(
+          //                         borderRadius: BorderRadius.circular(6),
+          //                         child: LinearProgressIndicator(
+          //                           value: moodPercentage,
+          //                           backgroundColor:
+          //                               Colors.white.withValues(alpha: 0.1),
+          //                           valueColor:
+          //                               AlwaysStoppedAnimation(moodColor),
+          //                           minHeight: 8,
+          //                         ),
+          //                       ),
+          //                     ),
+          //                     const SizedBox(width: 10),
+          //                     Text(
+          //                       '$moodPercentInt%',
+          //                       style: TextStyle(
+          //                         color: moodColor,
+          //                         fontSize: 14,
+          //                         fontWeight: FontWeight.bold,
+          //                       ),
+          //                     ),
+          //                   ],
+          //                 ),
+          //               ),
+          //             ],
+          //           ),
+          //         ),
+          //       );
+          //     },
+          //   ),
           ],
         ),
       ),
