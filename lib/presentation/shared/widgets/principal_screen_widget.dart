@@ -1,4 +1,3 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:habivi/domain/services/habit_mood_service.dart';
@@ -6,6 +5,7 @@ import 'package:habivi/presentation/providers/dashboard_providers.dart';
 import 'package:habivi/presentation/providers/mood_provider.dart';
 import 'package:habivi/presentation/shared/widgets/attribute_orbs.dart';
 import 'package:habivi/presentation/shared/widgets/racha_widget.dart';
+import 'dart:ui';
 
 // ============================================================
 // HomeInfoPanel: el "cubo" arrastrable que vive sobre el video.
@@ -17,11 +17,9 @@ import 'package:habivi/presentation/shared/widgets/racha_widget.dart';
 // ============================================================
 class HomeInfoPanel extends ConsumerWidget {
   // Constructor. "super.key" es un identificador interno que Flutter
-  // usa para saber qué widget es cuál cuando re-dibuja. Siempre se pone.
   const HomeInfoPanel({super.key});
 
   // build() es EL método más importante de cualquier widget:
-  // Flutter lo llama cada vez que necesita dibujar este widget,
   // y lo que retornes aquí es lo que se ve en pantalla.
   // - context: información de dónde está el widget en el árbol
   // - ref: la "llave" para leer providers de Riverpod
@@ -56,161 +54,155 @@ class HomeInfoPanel extends ConsumerWidget {
         // Center: centra su hijo horizontalmente (importa en pantallas anchas)
         return Center(
           // ConstrainedBox: le pone un límite de tamaño a su hijo.
-          // Aquí: "nunca más ancho que 480 píxeles". En un celular no afecta
-          // (la pantalla es más angosta), pero en web/PC evita que el panel
-          // se estire feo a lo ancho de todo el monitor.
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 480),
-
             // Container: la "caja" visual. Aquí definimos el margen,
-            // el fondo, los bordes redondeados... el look del cubo.
-            child: Container(
-              // margin = espacio POR FUERA de la caja (separa del borde de pantalla)
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
               margin: const EdgeInsets.symmetric(horizontal: 12),
+              curve: Curves.easeInOut,
 
               // decoration = la apariencia de la caja
               decoration: BoxDecoration(
-                // Negro semi-transparente (alpha 0.45 = 45% opaco)
-                // para que el video se vea un poquito a través del panel
-                color: Colors.black.withValues(alpha: 0.45),
-
-                // Esquinas redondeadas SOLO arriba (24 px de radio),
-                // porque abajo el panel se pega al borde de la pantalla
                 borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(24)),
-
-                // Un borde blanco sutil (15% opaco) para separarlo del video
-                border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                  const BorderRadius.vertical(top: Radius.circular(24)),
+                //diseno para el widget con sombras
+                
+                //halo difuso
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha:0.3),
+                    blurRadius: 4,
+                    spreadRadius: 3,
+                  ),
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha:0.2),
+                    blurRadius: 14,
+                    spreadRadius: 2,
+                  ),
+                ]
               ),
-
-              // ClipRRect: "recorta" el contenido con las mismas esquinas
-              // redondeadas. Sin esto, al hacer scroll el contenido se
-              // saldría por las esquinas del cubo.
+            
+              // ClipRRect: "recorta" el contenido con las mismas esquinas redondeadas. Sin esto, al hacer scroll el contenido se borra.
               child: ClipRRect(
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(24)),
-
-                // ScrollConfiguration: por defecto Flutter Web solo permite
-                // arrastrar con DEDO. Aquí le decimos "también acepta arrastre
-                // con clic de mouse y trackpad", que fue lo que pediste.
-                child: ScrollConfiguration(
-                  behavior: ScrollConfiguration.of(context).copyWith(
-                    dragDevices: {
-                      PointerDeviceKind.touch, // dedo
-                      PointerDeviceKind.mouse, // clic sostenido del mouse
-                      PointerDeviceKind.trackpad, // trackpad del portátil
-                    },
-                  ),
-
-                  // ListView: una lista con scroll vertical.
-                  // Le pasamos el scrollController del builder: ESA línea es
-                  // la que hace que arrastrar el contenido mueva el panel.
-                  child: ListView(
-                    controller: scrollController,
-
-                    // padding = espacio POR DENTRO de la caja
-                    // fromLTRB = Left, Top, Right, Bottom (izq, arriba, der, abajo)
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-
-                    // children = la lista de widgets que van uno debajo de otro
-                    children: [
-                      // ---- El "asa": la barrita gris que indica "arrástrame" ----
-                      Center(
-                        child: Container(
-                          width: 40,
-                          height: 4,
-                          margin: const EdgeInsets.only(bottom: 12),
-                          decoration: BoxDecoration(
-                            color: Colors.white38, // blanco al 38% de opacidad
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ),
-
-                      // ================================================
-                      // PARTE SIEMPRE VISIBLE (cabe en el 30% colapsado)
-                      // ================================================
-
-                      // Tus rachas (widget que YA existe en tu proyecto)
-                      const RachaIndicator(),
-
-                      // SizedBox sin hijo = simplemente un espacio en blanco
-                      const SizedBox(height: 16),
-
-                      // La barra de energía. moodAsync.when() maneja los 3 casos:
-                      moodAsync.when(
-                        // mientras carga: no muestres nada (caja de tamaño 0)
-                        loading: () => const SizedBox.shrink(),
-                        // si hay error: tampoco muestres nada
-                        // (los _ significan "recibo estos parámetros pero los ignoro")
-                        error: (_, __) => const SizedBox.shrink(),
-                        // cuando llegan los datos: dibuja la barra
-                        data: (mood) => _EnergyBar(moodPercentage: mood),
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      // ================================================
-                      // PARTE "ESCONDIDA": queda por debajo del pliegue
-                      // y solo se ve al arrastrar el panel hacia arriba
-                      // ================================================
-                      dashboardAsync.when(
-                        loading: () =>
-                            const Center(child: CircularProgressIndicator()),
-                        error: (e, _) => Text(
-                          'Error: $e',
-                          style: const TextStyle(color: Colors.white54),
-                        ),
-                        data: (data) => Column(
-                          // alinea los hijos a la izquierda
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Tus bolas de energía (widget que YA existe).
-                            // data.atributos viene del dashboardDataProvider
-                            AttributeOrbs(atributos: data.atributos),
-                            const SizedBox(height: 20),
-
-                            // Filas de info extra. _InfoRow es un widget
-                            // nuestro definido más abajo en este archivo
-                            _InfoRow(
-                              icon: Icons.check_circle_outline,
-                              label: 'Hábitos hoy',
-                              // '${a}/${b}' junta dos números en un texto: "3/5"
-                              value: '${data.habitosHoy}/${data.totalHabitos}',
-                            ),
-                            _InfoRow(
-                              icon: Icons.emoji_events_outlined,
-                              label: 'Logros',
-                              value:
-                                  '${data.logrosDesbloqueados}/${data.totalLogros}',
-                            ),
-                            _InfoRow(
-                              icon: Icons.school_outlined,
-                              label: 'Puntos de estudio',
-                              value: '${data.puntosEstudio}',
-                            ),
-                          ],
-                        ),
-                      ),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12), // desenfoque del fondo
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                     begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.white.withValues(alpha: 0.18), // arriba
+                      Colors.white.withValues(alpha: 0.06), // abajo
                     ],
                   ),
+                   border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.25)),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(24)),
+                 ),
+                // ScrollConfiguration: por defecto Flutter Web solo permite
+                // arrastrar con DEDO.
+              child: ScrollConfiguration(
+                behavior: ScrollConfiguration.of(context).copyWith(
+                  dragDevices: {
+                    PointerDeviceKind.touch, // dedo
+                     PointerDeviceKind.mouse, // clic sostenido del mouse
+                    PointerDeviceKind.trackpad, // trackpad del portátil
+                  },
+                ),
+                  // ListView: una lista con scroll vertical.
+                  // Le pasamos el scrollController del builder: ESA línea es la que hace que arrastrar el contenido mueva el panel.
+              child: ListView(
+                controller: scrollController,
+                  // fromLTRB = Left, Top, Right, Bottom (izq, arriba, der, abajo)
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+
+                // children = la lista de widgets que van uno debajo de otro
+                children: [
+                      // ---- El "asa": la barrita gris
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white38, // blanco al 38% de opacidad
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                     ),
+                  ),
+                  // PARTE SIEMPRE VISIBLE (cabe en el 30% colapsado)
+                  //parte de la racha de habitos, que se encuentra en el widget RachaIndicator
+                  const RachaIndicator(),
+                  // SizedBox sin hijo
+                  const SizedBox(height: 16),
+                  // La barra de energía. moodAsync.when() maneja los 3 casos:
+                  moodAsync.when(
+                    // mientras carga: no muestres nada (caja de tamaño 0)
+                    loading: () => const SizedBox.shrink(),
+                    // si hay error: tampoco muestres nada
+                    // (los _ significan "recibo estos parámetros pero los ignoro")
+                    error: (_, __) => const SizedBox.shrink(),
+                    // cuando llegan los datos: dibuja la barra
+                    data: (mood) => _EnergyBar(moodPercentage: mood),
+                  ),
+
+                  const SizedBox(height: 20),
+                  // PARTE ESCONDIDA: queda por debajo del pliegue y solo se ve al arrastrar el panel hacia arriba
+                  dashboardAsync.when(
+                    loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                      error: (e, _) => Text(
+                        'Error: $e',
+                        style: const TextStyle(color: Colors.white54),
+                      ),
+                      data: (data) => Column(
+                        // alinea los hijos a la izquierda
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // bolas de energía
+                          // data.atributos viene del dashboardDataProvider
+                          AttributeOrbs(atributos: data.atributos),
+                          const SizedBox(height: 20),
+                          // Filas de info extra. _InfoRow es un widget
+                          _InfoRow(
+                            icon: Icons.check_circle_outline,
+                            label: 'Hábitos hoy',
+                            // '${a}/${b}' junta dos números en un texto: "3/5"
+                            value: '${data.habitosHoy}/${data.totalHabitos}',
+                          ),
+                          _InfoRow(
+                            icon: Icons.emoji_events_outlined,
+                            label: 'Logros',
+                            value:
+                              '${data.logrosDesbloqueados}/${data.totalLogros}',
+                          ),
+                          _InfoRow(
+                            icon: Icons.school_outlined,
+                            label: 'Puntos de estudio',
+                            value: '${data.puntosEstudio}',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
-        );
-      },
-    );
+        ),
+        ),
+      ),
+      );
+    },
+  );
   }
 }
-
-// ============================================================
 // _EnergyBar: la barra de energía (emoji + barra + porcentaje).
-// Es la MISMA que tenías en home_screen, solo que extraída aquí.
-// Empieza con _ = privada, solo se usa en este archivo.
-// Es StatelessWidget (no Consumer) porque no lee providers:
-// el porcentaje se lo pasan ya listo por el constructor.
-// ============================================================
 class _EnergyBar extends StatelessWidget {
   // required = parámetro obligatorio al crear el widget
   const _EnergyBar({required this.moodPercentage});
@@ -233,11 +225,9 @@ class _EnergyBar extends StatelessWidget {
       children: [
         Text(emoji, style: const TextStyle(fontSize: 20)),
         const SizedBox(width: 12), // espacio horizontal
-
         // Expanded = "ocupa todo el espacio horizontal que sobre".
         // Así la barra se estira y el emoji y el % quedan a los lados.
         // Esto también es parte de lo responsivo: la barra se adapta
-        // sola al ancho de cualquier pantalla.
         Expanded(
           child: ClipRRect(
             borderRadius:
@@ -268,11 +258,7 @@ class _EnergyBar extends StatelessWidget {
   }
 }
 
-// ============================================================
 // _InfoRow: una fila reutilizable de "icono + etiqueta + valor".
-// La definimos una vez y la usamos 3 veces arriba. Esa es la
-// gracia de los widgets: piezas reutilizables.
-// ============================================================
 class _InfoRow extends StatelessWidget {
   const _InfoRow(
       {required this.icon, required this.label, required this.value});
