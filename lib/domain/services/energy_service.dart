@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:hive/hive.dart';
 import 'package:habivi/core/constants/hive_box_names.dart';
 import 'package:habivi/data/models/habito.dart';
+import 'package:habivi/core/utils/app_clock.dart';
 
 class EnergiaAtributos {
   final int cuerpo;
@@ -51,7 +52,7 @@ class EnergyService {
   static const int umbralDesbalance = 40;
 
   static String _today() {
-    final now = DateTime.now();
+    final now = AppClock.now();
     return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
   }
 
@@ -59,7 +60,7 @@ class EnergyService {
     try {
       final parts = date.split('-');
       final dt = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
-      return DateTime.now().difference(dt).inDays;
+      return AppClock.now().difference(dt).inDays;
     } catch (_) {
       return 0;
     }
@@ -161,7 +162,7 @@ class EnergyService {
   static Future<int> rachaActual() async {
     final box = await Hive.openBox<Habito>(HiveBoxNames.habito);
     int streak = 0;
-    final now = DateTime.now();
+    final now = AppClock.now();
 
     for (int d = 0; d < 365; d++) {
       final day = now.subtract(Duration(days: d));

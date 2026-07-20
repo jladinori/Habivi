@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:habivi/data/repositories/user_repository.dart';
 import 'package:habivi/data/models/usuario.dart';
+import 'package:habivi/presentation/providers/dev_mode_provider.dart';
 import 'package:habivi/presentation/providers/theme_provider.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -248,6 +249,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               title: const Text('Notas'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => context.push('/settings/notes'),
+            ),
+          ),
+          Card(
+            child: SwitchListTile(
+              secondary: Icon(Icons.developer_mode, color: Theme.of(context).colorScheme.primary),
+              title: const Text('Modo desarrollador'),
+              subtitle: const Text('Muestra controles de tiempo en Inicio'),
+              value: ref.watch(devModeProvider),
+              onChanged: (_) => ref.read(devModeProvider.notifier).toggle(),
             ),
           ),
           const SizedBox(height: 24),
