@@ -9,11 +9,6 @@ import 'dart:ui';
 
 // ============================================================
 // HomeInfoPanel: el "cubo" arrastrable que vive sobre el video.
-//
-// "class ... extends ConsumerWidget" significa: esto es un widget
-// que puede LEER providers de Riverpod (por eso Consumer).
-// Usamos ConsumerWidget en vez de StatelessWidget porque
-// necesitamos ref.watch() para leer la energía y las rachas.
 // ============================================================
 class HomeInfoPanel extends ConsumerWidget {
   // Constructor. "super.key" es un identificador interno que Flutter
@@ -35,13 +30,12 @@ class HomeInfoPanel extends ConsumerWidget {
     // El MISMO color que decide el video de fondo (ambos salen de
     // moodPercentage), así el glow siempre combina con el video puesto.
     final moodColor = moodAsync.maybeWhen(
-      data: (mood) => HabitMoodService.getMoodColor(mood),
+      data: (mood) => HabitMoodService.getGlowColor(mood),
       orElse: () => Colors.teal, // color neutro mientras carga
     );
 
-    // DraggableScrollableSheet es el widget MÁGICO de todo esto:
+    // DraggableScrollableSheet 
     // un panel anclado abajo que el usuario arrastra para expandir/colapsar.
-    // Es el mismo patrón del panel de Google Maps.
     return DraggableScrollableSheet(
       // Los tamaños son FRACCIONES de la altura de la pantalla (0.0 a 1.0).
       // Por eso es responsivo: 0.30 = "30% de la pantalla" en CUALQUIER celular.
@@ -76,7 +70,6 @@ class HomeInfoPanel extends ConsumerWidget {
                 borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(24)),
                 //diseno para el widget con sombras
-
                 //halo difuso con el color del estado de ánimo (glow)
                 boxShadow: [
                   // halo grande y difuso: el "aire luminoso"
@@ -108,8 +101,8 @@ class HomeInfoPanel extends ConsumerWidget {
                     colors: [
                       // alphas altos = vidrio blanco lechoso; bajarlos
                       // vuelve el panel más transparente/oscuro
-                      Colors.white.withValues(alpha: 0.60), // arriba
-                      Colors.white.withValues(alpha: 0.40), // abajo
+                      Colors.white.withValues(alpha: 0.8), // arriba
+                      Color.lerp(Colors.white, moodColor,  0.3)!.withValues(alpha:.6), // abajo
                     ],
                   ),
                    border: Border.all(
@@ -188,12 +181,13 @@ class HomeInfoPanel extends ConsumerWidget {
                             // '${a}/${b}' junta dos números en un texto: "3/5"
                             value: '${data.habitosHoy}/${data.totalHabitos}',
                           ),
-                          _InfoRow(
-                            icon: Icons.emoji_events_outlined,
-                            label: 'Logros',
-                            value:
-                              '${data.logrosDesbloqueados}/${data.totalLogros}',
-                          ),
+
+                          // _InfoRow(
+                          //   icon: Icons.emoji_events_outlined,
+                          //   label: 'Logros',
+                          //   value:
+                          //     '${data.logrosDesbloqueados}/${data.totalLogros}',
+                          // ),
                           _InfoRow(
                             icon: Icons.school_outlined,
                             label: 'Puntos de estudio',
@@ -226,7 +220,7 @@ class _EnergyBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Le preguntamos a tu servicio existente el color según el ánimo
-    final moodColor = HabitMoodService.getMoodColor(moodPercentage);
+    final moodColor = HabitMoodService.getGlowColor(moodPercentage);
     // Y el texto del estado, ej: "Feliz 😊"
     final moodStateStr = HabitMoodService.getMoodState(moodPercentage);
     // Del texto sacamos solo el emoji: split(' ') corta por espacios

@@ -80,12 +80,13 @@ class HabitMoodService {
   }
 
   /// Retorna el color según el estado de ánimo
-  static Color getMoodColor(double percentage) {
+  /// Color del glow del panel, a juego con la paleta de cada video
+  static Color getGlowColor(double percentage) {
     final percent = (percentage * 100).toInt();
-    if (percent >= 80) return const Color(0xFF4CAF50); // Green
-    if (percent >= 60) return const Color(0xFF2196F3); // Blue
-    if (percent >= 40) return const Color(0xFFFFC107); // Amber
-    if (percent >= 20) return const Color(0xFFFF9800); // Orange
-    return const Color(0xFFF44336); // Red
+    if (percent >= 80) return const Color(0xFFFFA000);
+    if (percent >= 60) return const Color(0xFFEF5350);
+    if (percent >= 40) return const Color(0xFF5C8DBC);
+    if (percent >= 20) return const Color.fromARGB(235, 198, 56, 227);
+    return const Color(0xFF78909C);
   }
 }
