@@ -32,6 +32,13 @@ class HomeInfoPanel extends ConsumerWidget {
     final moodAsync =
         ref.watch(moodPercentageProvider); // el % de energía (0.0 a 1.0)
 
+    // El MISMO color que decide el video de fondo (ambos salen de
+    // moodPercentage), así el glow siempre combina con el video puesto.
+    final moodColor = moodAsync.maybeWhen(
+      data: (mood) => HabitMoodService.getMoodColor(mood),
+      orElse: () => Colors.teal, // color neutro mientras carga
+    );
+
     // DraggableScrollableSheet es el widget MÁGICO de todo esto:
     // un panel anclado abajo que el usuario arrastra para expandir/colapsar.
     // Es el mismo patrón del panel de Google Maps.
@@ -58,7 +65,9 @@ class HomeInfoPanel extends ConsumerWidget {
             constraints: const BoxConstraints(maxWidth: 480),
             // Container: la "caja" visual. Aquí definimos el margen,
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
+              // 800ms: cuando cambia el video, el glow se funde suave
+              // del color viejo al nuevo
+              duration: const Duration(milliseconds: 800),
               margin: const EdgeInsets.symmetric(horizontal: 12),
               curve: Curves.easeInOut,
 
@@ -67,18 +76,20 @@ class HomeInfoPanel extends ConsumerWidget {
                 borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(24)),
                 //diseno para el widget con sombras
-                
-                //halo difuso
+
+                //halo difuso con el color del estado de ánimo (glow)
                 boxShadow: [
+                  // halo grande y difuso: el "aire luminoso"
                   BoxShadow(
-                    color: Colors.black.withValues(alpha:0.3),
-                    blurRadius: 4,
-                    spreadRadius: 3,
+                    color: moodColor.withValues(alpha: 0.35),
+                    blurRadius: 45,
+                    spreadRadius: 5,
                   ),
+                  // brillo fino pegado al borde: efecto neón
                   BoxShadow(
-                    color: Colors.black.withValues(alpha:0.2),
+                    color: moodColor.withValues(alpha: 0.25),
                     blurRadius: 14,
-                    spreadRadius: 2,
+                    spreadRadius: 1,
                   ),
                 ]
               ),
@@ -95,12 +106,14 @@ class HomeInfoPanel extends ConsumerWidget {
                      begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.white.withValues(alpha: 0.18), // arriba
-                      Colors.white.withValues(alpha: 0.06), // abajo
+                      // alphas altos = vidrio blanco lechoso; bajarlos
+                      // vuelve el panel más transparente/oscuro
+                      Colors.white.withValues(alpha: 0.60), // arriba
+                      Colors.white.withValues(alpha: 0.40), // abajo
                     ],
                   ),
                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.25)),
+                      color: Colors.white.withValues(alpha: 0.5)),
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(24)),
                  ),
@@ -130,7 +143,7 @@ class HomeInfoPanel extends ConsumerWidget {
                       height: 4,
                       margin: const EdgeInsets.only(bottom: 12),
                       decoration: BoxDecoration(
-                        color: Colors.white38, // blanco al 38% de opacidad
+                        color: Colors.black26, // negro suave: visible sobre el vidrio claro
                         borderRadius: BorderRadius.circular(2),
                       ),
                      ),
@@ -158,7 +171,7 @@ class HomeInfoPanel extends ConsumerWidget {
                       const Center(child: CircularProgressIndicator()),
                       error: (e, _) => Text(
                         'Error: $e',
-                        style: const TextStyle(color: Colors.white54),
+                        style: const TextStyle(color: Colors.black54),
                       ),
                       data: (data) => Column(
                         // alinea los hijos a la izquierda
@@ -235,7 +248,7 @@ class _EnergyBar extends StatelessWidget {
             child: LinearProgressIndicator(
               value: moodPercentage, // qué tan llena está (0.0 a 1.0)
               backgroundColor:
-                  Colors.white.withValues(alpha: 0.1), // fondo de la barra
+                  Colors.black.withValues(alpha: 0.08), // fondo de la barra
               valueColor:
                   AlwaysStoppedAnimation(moodColor), // color del relleno
               minHeight: 8, // grosor de la barra
@@ -274,16 +287,16 @@ class _InfoRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Icon(icon, color: Colors.white70, size: 20),
+          Icon(icon, color: Colors.black54, size: 20),
           const SizedBox(width: 12),
           // Expanded empuja el valor hasta la derecha
           Expanded(
-            child: Text(label, style: const TextStyle(color: Colors.white70)),
+            child: Text(label, style: const TextStyle(color: Colors.black54)),
           ),
           Text(
             value,
             style: const TextStyle(
-                color: Colors.white, fontWeight: FontWeight.bold),
+                color: Colors.black87, fontWeight: FontWeight.bold),
           ),
         ],
       ),
