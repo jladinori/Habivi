@@ -80,41 +80,41 @@ final allRachasProvider = FutureProvider<Map<dynamic, Racha>>((ref) async {
 });
 
 /// Provider para actualizar la racha diaria cuando cambian los hábitos
-final updateDailyRachaProvider = FutureProvider<void>((ref) async {
-  final repo = ref.watch(rachaRepositoryProvider);
-  final habitRepo = HabitRepository();
+// final updateDailyRachaProvider = FutureProvider<void>((ref) async {
+//   final repo = ref.watch(rachaRepositoryProvider);
+//   final habitRepo = HabitRepository();
   
-  final currentRacha = await repo.readDailyRacha();
-  if (currentRacha == null) return;
+//   final currentRacha = await repo.readDailyRacha();
+//   if (currentRacha == null) return;
   
-  final habits = await habitRepo.readAll();
-  final hasCompleted = RachaService.hasCompletedDailyHabitToday(habits.values.toList());
+//   final habits = await habitRepo.readAll();
+//   final hasCompleted = RachaService.hasCompletedDailyHabitToday(habits.values.toList());
   
-  final updatedRacha = RachaService.updateDailyRacha(
-    currentRacha: currentRacha,
-    completedDailyHabitToday: hasCompleted,
-  );
+//   final updatedRacha = RachaService.updateDailyRacha(
+//     currentRacha: currentRacha,
+//     completedDailyHabitToday: hasCompleted,
+//   );
   
-  await repo.update(updatedRacha);
-  ref.refresh(dailyRachaProvider);
-});
+//   await repo.update(updatedRacha);
+//   ref.refresh(dailyRachaProvider);
+// });
 
-/// Provider para actualizar la racha semanal cuando cambian los hábitos
-final updateWeeklyRachaProvider = FutureProvider<void>((ref) async {
-  final repo = ref.watch(rachaRepositoryProvider);
-  final habitRepo = HabitRepository();
+// /// Provider para actualizar la racha semanal cuando cambian los hábitos
+// final updateWeeklyRachaProvider = FutureProvider<void>((ref) async {
+//   final repo = ref.watch(rachaRepositoryProvider);
+//   final habitRepo = HabitRepository();
   
-  final currentRacha = await repo.readWeeklyRacha();
-  if (currentRacha == null) return;
+//   final currentRacha = await repo.readWeeklyRacha();
+//   if (currentRacha == null) return;
   
-  final habits = await habitRepo.readAll();
-  final hasCompleted = RachaService.hasCompletedWeeklyHabitThisWeek(habits.values.toList());
+//   final habits = await habitRepo.readAll();
+//   final hasCompleted = RachaService.hasCompletedWeeklyHabitThisWeek(habits.values.toList());
   
-  final updatedRacha = RachaService.updateWeeklyRacha(
-    currentRacha: currentRacha,
-    completedWeeklyHabitThisWeek: hasCompleted,
-  );
+//   final updatedRacha = RachaService.updateWeeklyRacha(
+//     currentRacha: currentRacha,
+//     completedWeeklyHabitThisWeek: hasCompleted,
+//   );
   
-  await repo.update(updatedRacha);
-  ref.refresh(weeklyRachaProvider);
-});
+//   await repo.update(updatedRacha);
+//   ref.refresh(weeklyRachaProvider);
+// });
