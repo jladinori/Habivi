@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:habivi/data/models/habito.dart';
 import 'package:habivi/data/repositories/habit_repository.dart';
 import 'package:habivi/presentation/shared/widgets/habit_contribution_board.dart';
+import 'package:habivi/core/utils/app_clock.dart';
+import 'package:habivi/presentation/providers/dev_mode_provider.dart';
 
 const List<Color> _habitColors = [
   Color(0xFFEC407A), // Pink
@@ -92,7 +94,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
   }
 
   String _obtenerFechaHoy() {
-    final now = DateTime.now();
+    final now = AppClock.now();
     return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
   }
 
@@ -513,6 +515,9 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+     ref.listen(timeOffsetProvider, (prev, next) {
+      _loadHabitos();
+    });
     return Scaffold(
       body: SafeArea(
         child: Column(

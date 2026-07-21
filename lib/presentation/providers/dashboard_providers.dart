@@ -1,6 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:habivi/core/constants/hive_box_names.dart';
+import 'package:habivi/core/utils/app_clock.dart';
 import 'package:habivi/data/models/habito.dart';
 import 'package:habivi/data/models/logro.dart';
+import 'package:habivi/data/models/sesion_estudio.dart';
 import 'package:habivi/data/models/tarea.dart';
 import 'package:habivi/data/repositories/estudio_repository.dart';
 import 'package:habivi/data/repositories/habit_repository.dart';
@@ -11,6 +15,7 @@ import 'package:habivi/domain/gamification/achievement_definitions.dart';
 import 'package:habivi/domain/services/achievement_service.dart';
 import 'package:habivi/domain/services/energy_service.dart';
 import 'package:habivi/domain/services/mood_service.dart';
+import 'package:habivi/presentation/providers/dev_mode_provider.dart';
 
 class HabitoConIndice {
   final int index;
@@ -51,17 +56,41 @@ class DashboardData {
 }
 
 String _today() {
-  final now = DateTime.now();
+  final now = AppClock.now();
   return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
 }
 
+// Emite un "tic" cada vez que cambian los hábitos (para refrescar en vivo).
+final _habitTick = StreamProvider<int>((ref) async* {
+  final box = await Hive.openBox<Habito>(HiveBoxNames.habito);
+  yield 0;
+  await for (final _ in box.watch()) {
+    yield DateTime.now().millisecondsSinceEpoch;
+  }
+});
+
+// Emite un "tic" cada vez que cambian las sesiones de estudio.
+final _estudioTick = StreamProvider<int>((ref) async* {
+  final box = await Hive.openBox<SesionEstudio>(HiveBoxNames.sesionEstudio);
+  yield 0;
+  await for (final _ in box.watch()) {
+    yield DateTime.now().millisecondsSinceEpoch;
+  }
+});
+
 final dashboardDataProvider = FutureProvider<DashboardData>((ref) async {
+  // Al observar estos 3, el dashboard se recalcula solo cuando:
+  ref.watch(_habitTick); // cambian los hábitos
+  ref.watch(_estudioTick); // cambian los puntos de estudio
+  ref.watch(timeOffsetProvider); // avanzas el reloj (modo dev)
+
   final hoy = _today();
 
   final energia = await EnergyService.calculate();
   final atributos = await EnergyService.calculatePorAtributo();
   final diasSin = await EnergyService.diasSinActividad();
-  final mood = MoodService.calculateFrom(energia: energia, atributos: atributos, diasSinActividad: diasSin);
+  final mood = MoodService.calculateFrom(
+      energia: energia, atributos: atributos, diasSinActividad: diasSin);
   final racha = await EnergyService.rachaActual();
   final habitosHoy = await EnergyService.habitosCompletadosHoy();
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:habivi/domain/services/habit_mood_service.dart';
 import 'package:habivi/presentation/providers/dashboard_providers.dart';
+import 'package:habivi/presentation/providers/dev_mode_provider.dart';
 import 'package:habivi/presentation/providers/mood_provider.dart';
 import 'package:habivi/presentation/shared/widgets/attribute_orbs.dart';
 import 'package:habivi/presentation/shared/widgets/racha_widget.dart';
@@ -129,7 +130,7 @@ class HomeInfoPanel extends ConsumerWidget {
 
                 // children = la lista de widgets que van uno debajo de otro
                 children: [
-                      // ---- El "asa": la barrita gris
+                  // ---- El "asa": la barrita gris
                   Center(
                     child: Container(
                       width: 40,
@@ -196,7 +197,9 @@ class HomeInfoPanel extends ConsumerWidget {
                         ],
                       ),
                     ),
+                    const _DevTimeControls(), // controles de tiempo del modo dev
                   ],
+                  
                 ),
               ),
             ),
@@ -291,6 +294,113 @@ class _InfoRow extends StatelessWidget {
             value,
             style: const TextStyle(
                 color: Colors.black87, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+}
+// Controles del modo desarrollador: botones para avanzar el reloj.
+// Solo aparecen si el modo dev está activo en Configuración.
+// Controles del modo desarrollador con estilo glass, a juego con el panel.
+class _DevTimeControls extends ConsumerWidget {
+  const _DevTimeControls();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final devMode = ref.watch(devModeProvider);
+    if (!devMode) return const SizedBox.shrink(); // oculto si está apagado
+
+    final offset = ref.watch(timeOffsetProvider);
+    final notifier = ref.read(timeOffsetProvider.notifier);
+
+    // Texto amigable del reloj
+    String textoOffset() {
+      if (offset.inHours == 0) return 'Reloj en hora real';
+      final d = offset.inDays;
+      final h = offset.inHours % 24;
+      return d > 0
+          ? 'Reloj adelantado: +${d}d ${h}h'
+          : 'Reloj adelantado: +${h}h';
+    }
+
+    // Una "píldora" reutilizable
+    Widget pill(String label, Duration d, {bool reset = false}) {
+      final bg = reset
+          ? Colors.red.withValues(alpha: 0.15)
+          : Colors.white.withValues(alpha: 0.30);
+      final borde = reset
+          ? Colors.red.withValues(alpha: 0.40)
+          : Colors.white.withValues(alpha: 0.55);
+      final texto = reset ? Colors.red.shade700 : Colors.black87;
+
+      return Material(
+        color: bg,
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () => reset ? notifier.reset() : notifier.avanzar(d),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: borde),
+            ),
+            child: Text(
+              label,
+              style: TextStyle(
+                  color: texto, fontWeight: FontWeight.w600, fontSize: 13),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(top: 20),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.developer_mode,
+                    color: Colors.black54, size: 18),
+              ),
+              const SizedBox(width: 10),
+              const Text('Modo desarrollador',
+                  style: TextStyle(
+                      color: Colors.black87,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14)),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(textoOffset(),
+              style: const TextStyle(color: Colors.black54, fontSize: 12)),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              pill('+1 h', const Duration(hours: 1)),
+              pill('+5 h', const Duration(hours: 5)),
+              pill('+10 h', const Duration(hours: 10)),
+              pill('+24 h', const Duration(hours: 24)),
+              pill('+1 semana', const Duration(days: 7)),
+              pill('Reset', Duration.zero, reset: true),
+            ],
           ),
         ],
       ),

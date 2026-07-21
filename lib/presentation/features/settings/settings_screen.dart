@@ -251,6 +251,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               onTap: () => context.push('/settings/notes'),
             ),
           ),
+          //developer mode
           Card(
             child: SwitchListTile(
               secondary: Icon(Icons.developer_mode, color: Theme.of(context).colorScheme.primary),

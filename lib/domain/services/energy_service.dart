@@ -2,8 +2,8 @@ import 'dart:math' as math;
 
 import 'package:hive/hive.dart';
 import 'package:habivi/core/constants/hive_box_names.dart';
-import 'package:habivi/data/models/habito.dart';
 import 'package:habivi/core/utils/app_clock.dart';
+import 'package:habivi/data/models/habito.dart';
 
 class EnergiaAtributos {
   final int cuerpo;
@@ -56,10 +56,15 @@ class EnergyService {
     return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
   }
 
+  static String _formatDate(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+
   static int _daysSince(String date) {
     try {
       final parts = date.split('-');
-      final dt = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+      final dt = DateTime(
+          int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
       return AppClock.now().difference(dt).inDays;
     } catch (_) {
       return 0;
@@ -74,11 +79,13 @@ class EnergyService {
     String? lastActivityDate;
 
     for (final habito in box.values) {
-      if (habito.completadoHoy || habito.safeFechasCompletadas.contains(today)) {
+      if (habito.completadoHoy ||
+          habito.safeFechasCompletadas.contains(today)) {
         totalCompletionsToday++;
       }
       if (habito.fechaUltimoCompletado.isNotEmpty) {
-        if (lastActivityDate == null || habito.fechaUltimoCompletado.compareTo(lastActivityDate) > 0) {
+        if (lastActivityDate == null ||
+            habito.fechaUltimoCompletado.compareTo(lastActivityDate) > 0) {
           lastActivityDate = habito.fechaUltimoCompletado;
         }
       }
@@ -99,13 +106,17 @@ class EnergyService {
     final today = _today();
     int count = 0;
     for (final habito in box.values) {
-      if (habito.completadoHoy || habito.safeFechasCompletadas.contains(today)) {
+      if (habito.completadoHoy ||
+          habito.safeFechasCompletadas.contains(today)) {
         count++;
       }
     }
     return count;
   }
 
+  /// Bolas de energía: cada bola = % de hábitos de esa categoría que
+  /// cumplieron su meta dentro de su ventana de frecuencia.
+  /// Ej: 2 hábitos de Cuerpo, ambos cumplidos → 100%; solo uno → 50%.
   static Future<EnergiaAtributos> calculatePorAtributo() async {
     final box = await Hive.openBox<Habito>(HiveBoxNames.habito);
     final habitos = box.values.toList();
@@ -114,25 +125,25 @@ class EnergyService {
       final propios = habitos.where((h) => h.aspecto == aspecto).toList();
       if (propios.isEmpty) return 0;
 
-      final today = _today();
-      int completadosHoy = 0;
-      String? ultimaActividad;
-
+      int metaCumplida = 0;
       for (final h in propios) {
-        if (h.completadoHoy || h.safeFechasCompletadas.contains(today)) completadosHoy++;
-        if (h.fechaUltimoCompletado.isNotEmpty) {
-          if (ultimaActividad == null || h.fechaUltimoCompletado.compareTo(ultimaActividad) > 0) {
-            ultimaActividad = h.fechaUltimoCompletado;
+        // periodo = días de la ventana según frecuencia
+        final int periodo =
+            (7 / h.safeVecesPorSemana).ceil().clamp(1, 7).toInt();
+
+        // ¿se completó al menos una vez dentro de su ventana?
+        bool cumplido = false;
+        for (int i = 0; i < periodo; i++) {
+          final dia = _formatDate(AppClock.now().subtract(Duration(days: i)));
+          if (h.safeFechasCompletadas.contains(dia)) {
+            cumplido = true;
+            break; // basta 1 vez; repetir no suma más
           }
         }
+        if (cumplido) metaCumplida++;
       }
 
-      int energia = maxEnergy;
-      if (ultimaActividad != null) {
-        energia -= _daysSince(ultimaActividad) * dailyDecay;
-      }
-      energia += completadosHoy * energyPerHabit;
-      return energia.clamp(0, maxEnergy);
+      return ((metaCumplida / propios.length) * 100).round();
     }
 
     bool tiene(String aspecto) => habitos.any((h) => h.aspecto == aspecto);
@@ -166,7 +177,8 @@ class EnergyService {
 
     for (int d = 0; d < 365; d++) {
       final day = now.subtract(Duration(days: d));
-      final dateStr = '${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
+      final dateStr =
+          '${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
       bool anyCompleted = false;
       for (final habito in box.values) {
         if (habito.safeFechasCompletadas.contains(dateStr)) {
