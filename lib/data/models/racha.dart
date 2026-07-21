@@ -1,4 +1,5 @@
 import 'package:hive/hive.dart';
+import 'package:habivi/core/utils/app_clock.dart';
 
 @HiveType(typeId: 11)
 class Racha {
@@ -58,7 +59,7 @@ class Racha {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 
-  static String getTodayFormatted() => _formatDate(DateTime.now());
+  static String getTodayFormatted() => _formatDate(AppClock.now());
 
   static bool isSameDay(String fecha1, String fecha2) => fecha1 == fecha2;
 

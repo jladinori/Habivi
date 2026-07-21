@@ -17,25 +17,28 @@ class HabitMoodService {
       double sumaAportes = 0;
       int contados = 0;
 
-      for (final h in habitos) {
+            for (final h in habitos) {
         contados++;
 
-        // Si nunca se completó, aporta 0.
-        if (h.fechaUltimoCompletado.isEmpty) continue;
+        final fechas = h.safeFechasCompletadas;
+        if (fechas.isEmpty) continue; // nunca completado → aporta 0
 
-        // periodo = días que "dura" una completada según su frecuencia.
-        // vecesPorSemana: 7 = diario → periodo 1 día; 1 = semanal → 7 días.
+        // periodo = días que "dura" una completada según su frecuencia
         final int periodo =
             (7 / h.safeVecesPorSemana).ceil().clamp(1, 7).toInt();
 
-        final diasDesde = _daysSince(h.fechaUltimoCompletado);
+        // días desde la ÚLTIMA fecha realmente marcada (la LISTA es la verdad,
+        // NO fechaUltimoCompletado, que no se revierte al desmarcar)
+        final ultima = fechas.reduce((a, b) => a.compareTo(b) > 0 ? a : b);
+        final diasDesde = _daysSince(ultima);
 
         double aporte;
-        if (diasDesde <= periodo) {
-          aporte = 1.0; // dentro de su ventana → energía plena, se mantiene
+        if (diasDesde < periodo) {
+          aporte = 1.0; // dentro de su ventana → aporta lleno
         } else {
-          final exceso = diasDesde - periodo;
-          aporte = (1.0 - exceso * 0.2).clamp(0.0, 1.0); // fuera → baja gradual
+          // pasada su ventana: se descuenta por cada día extra
+          final exceso = diasDesde - periodo + 1;
+          aporte = (1.0 - exceso * 0.2).clamp(0.0, 1.0);
         }
         sumaAportes += aporte;
       }

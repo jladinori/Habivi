@@ -92,6 +92,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: Container(
                 color: Colors.black,
                 child: moodAsync.when(
+                  skipLoadingOnReload: true,
                   loading: () => const Center(child: CircularProgressIndicator()),
                   error: (error, stackTrace) => Center(
                     child: Text(

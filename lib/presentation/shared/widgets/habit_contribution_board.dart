@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:habivi/core/utils/app_clock.dart';
 
 class HabitContributionBoard extends StatefulWidget {
   final List<String> fechasCompletadas;
@@ -37,7 +38,7 @@ class _HabitContributionBoardState extends State<HabitContributionBoard> {
 
   @override
   Widget build(BuildContext context) {
-    final ahora = DateTime.now();
+    final ahora = AppClock.now();
     final hoy = DateTime(ahora.year, ahora.month, ahora.day);
 
     const numColumnas = 53; // 53 semanas para cubrir todo el año calendario

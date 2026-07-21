@@ -149,7 +149,9 @@ class HomeInfoPanel extends ConsumerWidget {
                   const SizedBox(height: 16),
                   // La barra de energía. moodAsync.when() maneja los 3 casos:
                   moodAsync.when(
+                    skipLoadingOnReload: true,
                     // mientras carga: no muestres nada (caja de tamaño 0)
+                  
                     loading: () => const SizedBox.shrink(),
                     // si hay error: tampoco muestres nada
                     // (los _ significan "recibo estos parámetros pero los ignoro")
@@ -394,9 +396,6 @@ class _DevTimeControls extends ConsumerWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
-              pill('+1 h', const Duration(hours: 1)),
-              pill('+5 h', const Duration(hours: 5)),
-              pill('+10 h', const Duration(hours: 10)),
               pill('+24 h', const Duration(hours: 24)),
               pill('+1 semana', const Duration(days: 7)),
               pill('Reset', Duration.zero, reset: true),

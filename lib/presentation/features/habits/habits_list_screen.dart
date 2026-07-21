@@ -153,18 +153,19 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
       final entry = _habitos[index];
       final habito = entry.value;
       final hoy = _obtenerFechaHoy();
-      habito.completadoHoy = !habito.completadoHoy;
-      habito.fechaUltimoCompletado = hoy;
 
+      habito.completadoHoy = !habito.completadoHoy;
       final list = List<String>.from(habito.safeFechasCompletadas);
       if (habito.completadoHoy) {
-        if (!list.contains(hoy)) {
-          list.add(hoy);
-        }
+        if (!list.contains(hoy)) list.add(hoy);
       } else {
         list.remove(hoy);
       }
       habito.fechasCompletadas = list;
+
+      // fechaUltimoCompletado = la fecha más reciente que QUEDE en la lista
+      habito.fechaUltimoCompletado =
+          list.isEmpty ? '' : list.reduce((a, b) => a.compareTo(b) > 0 ? a : b);
 
       // Guardar el cambio en la BD local
       await _repository.update(entry.key, habito);

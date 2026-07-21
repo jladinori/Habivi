@@ -1,11 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:habivi/domain/services/racha_service.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:habivi/core/constants/hive_box_names.dart';
 import 'package:habivi/data/models/racha.dart';
 import 'package:habivi/data/models/habito.dart';
 import 'package:habivi/data/repositories/racha_repository.dart';
 import 'package:habivi/data/repositories/habit_repository.dart';
-import 'package:habivi/domain/services/racha_service.dart';
+import 'package:habivi/presentation/providers/dev_mode_provider.dart';
 
 /// Provider para acceder al repositorio de rachas
 final rachaRepositoryProvider = Provider<RachaRepository>((ref) {
@@ -32,60 +33,41 @@ final habitsChangeListener = StreamProvider<int>((ref) async* {
 
 /// Provider para obtener la racha diaria
 final dailyRachaProvider = FutureProvider<Racha?>((ref) async {
-  // Primero inicializar
   await ref.watch(initializeRachasProvider.future);
-  
-  // Escuchar cambios en hábitos - esto fuerza re-evaluación
-  ref.watch(habitsChangeListener);
-  
+  ref.watch(timeOffsetProvider); // recalcula al avanzar el reloj
+  ref.watch(habitsChangeListener); // recalcula al cambiar hábitos
+
   final repo = ref.watch(rachaRepositoryProvider);
   final habitRepo = HabitRepository();
-  
-  final currentRacha = await repo.readDailyRacha();
-  if (currentRacha == null) return null;
-  
-  // Obtener hábitos y actualizar racha si es necesario
-  final habits = await habitRepo.readAll();
-  final hasCompleted = RachaService.hasCompletedDailyHabitToday(habits.values.toList());
-  
-  final updatedRacha = RachaService.updateDailyRacha(
-    currentRacha: currentRacha,
-    completedDailyHabitToday: hasCompleted,
-  );
-  
-  // SIEMPRE guardar la racha actualizada para asegurar persistencia
-  await repo.update(updatedRacha);
-  
-  return updatedRacha;
+  final current = await repo.readDailyRacha();
+  if (current == null) return null;
+
+  final habits = (await habitRepo.readAll()).values.toList();
+  final streak = RachaService.calcularRachaDiaria(habits);
+  final activoHoy = RachaService.completadoHoy(habits);
+  final updated = current.copyWith(cantidad: streak, enRiesgo: !activoHoy);
+  await repo.update(updated);
+  return updated;
 });
 
 /// Provider para obtener la racha semanal
+
 final weeklyRachaProvider = FutureProvider<Racha?>((ref) async {
-  // Primero inicializar
   await ref.watch(initializeRachasProvider.future);
-  
-  // Escuchar cambios en hábitos - esto fuerza re-evaluación
+  ref.watch(timeOffsetProvider);
   ref.watch(habitsChangeListener);
-  
+
   final repo = ref.watch(rachaRepositoryProvider);
   final habitRepo = HabitRepository();
-  
-  final currentRacha = await repo.readWeeklyRacha();
-  if (currentRacha == null) return null;
-  
-  // Obtener hábitos y actualizar racha si es necesario
-  final habits = await habitRepo.readAll();
-  final hasCompleted = RachaService.hasCompletedWeeklyHabitThisWeek(habits.values.toList());
-  
-  final updatedRacha = RachaService.updateWeeklyRacha(
-    currentRacha: currentRacha,
-    completedWeeklyHabitThisWeek: hasCompleted,
-  );
-  
-  // SIEMPRE guardar la racha actualizada para asegurar persistencia
-  await repo.update(updatedRacha);
-  
-  return updatedRacha;
+  final current = await repo.readWeeklyRacha();
+  if (current == null) return null;
+
+  final habits = (await habitRepo.readAll()).values.toList();
+  final streak = RachaService.calcularRachaSemanal(habits);
+  final activoSemana = RachaService.completadoEstaSemana(habits);
+  final updated = current.copyWith(cantidad: streak, enRiesgo: !activoSemana);
+  await repo.update(updated);
+  return updated;
 });
 
 /// Provider para obtener todas las rachas

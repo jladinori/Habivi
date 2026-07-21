@@ -44,7 +44,9 @@ class RachaIndicator extends ConsumerWidget {
                   emoji: '🔥',
                   label: 'Semanas',
                   value: '${racha.cantidad}',
-                  color: racha.enRiesgo ? Colors.grey : Colors.purple,
+                  color: (racha.cantidad == 0 || racha.enRiesgo) ?
+                   Colors.grey 
+                   : Colors.purple,
                 );
               },
             ),
@@ -82,7 +84,9 @@ class RachaIndicator extends ConsumerWidget {
                   emoji: '🔥',
                   label: 'Días',
                   value: '${racha.cantidad}',
-                  color: Colors.red,
+                  color: (racha.cantidad == 0 || racha.enRiesgo)
+                      ? Colors.grey
+                      : Colors.purple, // rojo oscuro cuando activa
                 );
               },
             ),
