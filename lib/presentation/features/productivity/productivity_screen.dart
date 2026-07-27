@@ -172,6 +172,37 @@ class _ProductivityScreenState extends ConsumerState<ProductivityScreen> {
     }
   }
 
+  void _abrirPantallaInfo(MetodoEstudioInfo metodo) {
+    switch (metodo.id) {
+      case 'pomodoro':
+        context.push('/productivity/pomodoro-info');
+        break;
+      case 'feynman':
+        context.push('/productivity/feynman-info');
+        break;
+      case 'active_recall':
+        context.push('/productivity/active-recall-info');
+        break;
+      case 'spaced_repetition':
+        context.push('/productivity/spaced-repetition-info');
+        break;
+      case 'cornell':
+        context.push('/productivity/cornell-info');
+        break;
+      case 'time_blocking':
+        context.push('/productivity/time-blocking-info');
+        break;
+      case '50_10':
+        context.push('/productivity/fifty-ten-info');
+        break;
+      case 'mind_maps':
+        context.push('/productivity/mind-maps-info');
+        break;
+      default:
+        _registrarSesion(metodo);
+    }
+  }
+
   void _mostrarHistorial() {
     showModalBottomSheet(
       context: context,
@@ -318,20 +349,11 @@ class _ProductivityScreenState extends ConsumerState<ProductivityScreen> {
                 ),
                 subtitle: Text(metodo.descripcion),
                 trailing: FilledButton.tonal(
-                  onPressed: () => _registrarSesion(metodo),
+                  onPressed: () => _abrirPantallaInfo(metodo),
                   child: const Text('+'),
                 ),
               ),
             ),
-          ),
-        ),
-        const SizedBox(height: 24),
-        ElevatedButton.icon(
-          onPressed: () => context.push('/productivity/pomodoro'),
-          icon: const Icon(Icons.timer),
-          label: const Text('Abrir Pomodoro'),
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16),
           ),
         ),
         const SizedBox(height: 32),
