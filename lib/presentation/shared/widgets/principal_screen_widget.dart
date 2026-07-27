@@ -193,7 +193,7 @@ class HomeInfoPanel extends ConsumerWidget {
                           // ),
                           _InfoRow(
                             icon: Icons.school_outlined,
-                            label: 'Puntos de estudio',
+                            label: 'Concentración',
                             value: '${data.puntosEstudio}',
                           ),
                         ],

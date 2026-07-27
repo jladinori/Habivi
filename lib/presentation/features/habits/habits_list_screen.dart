@@ -639,14 +639,6 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                                                 overflow: TextOverflow.ellipsis,
                                               ),
                                               const SizedBox(height: 6),
-                                              Text(
-                                                'Repite ${habito.safeVecesPorSemana} veces/semana',
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: cs.onSurface
-                                                      .withValues(alpha: 0.55),
-                                                ),
-                                              ),
                                             ],
                                           ),
                                         ),

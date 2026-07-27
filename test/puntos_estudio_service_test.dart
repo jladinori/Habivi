@@ -10,7 +10,7 @@ void main() {
   late Directory tempDir;
 
   setUpAll(() async {
-    tempDir = Directory.systemTemp.createTempSync('habivi_puntos_test');
+    tempDir = Directory.systemTemp.createTempSync('habivi_estudio_test');
     await HiveInitializer.initForTesting(tempDir.path);
   });
 
@@ -22,63 +22,62 @@ void main() {
   });
 
   group('MetodosEstudio', () {
-    test('tiene 8 métodos predefinidos', () {
-      expect(PuntosEstudioService.metodos.length, equals(8));
+    test('tiene 7 métodos predefinidos', () {
+      expect(EstudioService.metodos.length, equals(7));
     });
 
     test('cada método tiene id único y nombre no vacío', () {
-      final ids = PuntosEstudioService.metodos.map((m) => m.id).toSet();
-      expect(ids.length, equals(PuntosEstudioService.metodos.length));
-      for (final m in PuntosEstudioService.metodos) {
+      final ids = EstudioService.metodos.map((m) => m.id).toSet();
+      expect(ids.length, equals(EstudioService.metodos.length));
+      for (final m in EstudioService.metodos) {
         expect(m.nombre.isNotEmpty, isTrue);
         expect(m.descripcion.isNotEmpty, isTrue);
-        expect(m.puntosBasePorHora, greaterThan(0));
       }
     });
 
     test('buscarMetodo retorna el método correcto', () {
-      final metodo = PuntosEstudioService.buscarMetodo('feynman');
+      final metodo = EstudioService.buscarMetodo('feynman');
       expect(metodo, isNotNull);
       expect(metodo!.nombre, equals('Técnica Feynman'));
     });
 
     test('buscarMetodo retorna null para id inexistente', () {
-      final metodo = PuntosEstudioService.buscarMetodo('inexistente');
+      final metodo = EstudioService.buscarMetodo('inexistente');
       expect(metodo, isNull);
     });
   });
 
-  group('calcularPuntos', () {
-    test('calcula puntos para 60 minutos exactos', () {
-      final puntos = PuntosEstudioService.calcularPuntos('pomodoro', 60);
-      expect(puntos, equals(100));
+  group('calcularMinutos', () {
+    test('calcula minutos para 60 minutos exactos', () {
+      final minutos = EstudioService.calcularMinutos('pomodoro', 60);
+      expect(minutos, equals(60));
     });
 
-    test('calcula puntos para 30 minutos (mitad)', () {
-      final puntos = PuntosEstudioService.calcularPuntos('pomodoro', 30);
-      expect(puntos, equals(50));
+    test('calcula minutos para 30 minutos (mitad)', () {
+      final minutos = EstudioService.calcularMinutos('pomodoro', 30);
+      expect(minutos, equals(30));
     });
 
-    test('retorna 0 para método inexistente', () {
-      final puntos = PuntosEstudioService.calcularPuntos('inexistente', 60);
-      expect(puntos, equals(0));
+    test('retorna 0 para 0 minutos', () {
+      final minutos = EstudioService.calcularMinutos('pomodoro', 0);
+      expect(minutos, equals(0));
     });
 
-    test('Feynman da más puntos que Pomodoro al mismo tiempo', () {
-      final pomodoro = PuntosEstudioService.calcularPuntos('pomodoro', 60);
-      final feynman = PuntosEstudioService.calcularPuntos('feynman', 60);
-      expect(feynman, greaterThan(pomodoro));
+    test('Feynman retorna los mismos minutos que Pomodoro al mismo tiempo', () {
+      final pomodoro = EstudioService.calcularMinutos('pomodoro', 60);
+      final feynman = EstudioService.calcularMinutos('feynman', 60);
+      expect(feynman, equals(pomodoro));
     });
   });
 
-  group('puntosDeHoy', () {
+  group('minutosDeHoy', () {
     test('retorna 0 cuando no hay sesiones', () async {
-      final box = await Hive.openBox<SesionEstudio>('testPuntosHoy');
+      final box = await Hive.openBox<SesionEstudio>('testMinutosHoy');
       await box.clear();
       await box.close();
 
-      final puntos = await PuntosEstudioService.puntosDeHoy();
-      expect(puntos, equals(0));
+      final minutos = await EstudioService.minutosDeHoy();
+      expect(minutos, equals(0));
     });
   });
 }

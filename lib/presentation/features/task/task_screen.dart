@@ -2,6 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:habivi/data/models/tarea.dart';
 import 'package:habivi/data/repositories/task_repository.dart';
 
+// Colores para las tarjetas de pendientes (rotación cíclica)
+const List<Color> _taskColors = [
+  Color(0xFF7C4DFF), // Purple accent
+  Color(0xFF00BFA5), // Teal accent
+  Color(0xFFFF6D00), // Orange accent
+  Color(0xFF448AFF), // Blue accent
+  Color(0xFFEC407A), // Pink
+  Color(0xFF66BB6A), // Green
+];
+
 class TaskScreen extends StatefulWidget {
   const TaskScreen({super.key});
 
@@ -9,10 +19,11 @@ class TaskScreen extends StatefulWidget {
   State<TaskScreen> createState() => _TaskScreenState();
 }
 
-class _TaskScreenState extends State<TaskScreen> {
+class _TaskScreenState extends State<TaskScreen> with TickerProviderStateMixin {
   late TaskRepository _repository;
   List<MapEntry<dynamic, Tarea>> _tareas = [];
   bool _isLoading = true;
+  bool _completadosExpanded = true;
 
   @override
   void initState() {
@@ -35,9 +46,7 @@ class _TaskScreenState extends State<TaskScreen> {
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e')),
         );
@@ -82,13 +91,9 @@ class _TaskScreenState extends State<TaskScreen> {
       if (tarea != null) {
         tarea.completada = !tarea.completada;
         await box.put(key, tarea);
+        await box.flush();
       }
       await _cargarTareas();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(tarea?.completada == true ? '✓ Completado' : 'Pendiente sin completar')),
-        );
-      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -98,7 +103,7 @@ class _TaskScreenState extends State<TaskScreen> {
     }
   }
 
-  Future<void> _eliminarPendiente(dynamic key, String nombre) async {
+  Future<void> _eliminarPendiente(dynamic key) async {
     try {
       final box = await _repository.box;
       await box.delete(key);
@@ -219,109 +224,395 @@ class _TaskScreenState extends State<TaskScreen> {
     });
   }
 
+  /// Tarjeta de pendiente ACTIVO — estilo premium igual a hábitos
+  Widget _buildActivaCard(BuildContext context, dynamic key, Tarea tarea, int index) {
+    final cs = Theme.of(context).colorScheme;
+    final color = _taskColors[tarea.idTarea % _taskColors.length];
+
+    return GestureDetector(
+      onLongPress: () {
+        showDialog(
+          context: context,
+          builder: (BuildContext ctx) {
+            return AlertDialog(
+              title: const Text('Eliminar pendiente'),
+              content: Text('¿Eliminar "${tarea.nombreTarea}"?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancelar'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _eliminarPendiente(key);
+                  },
+                  child: const Text('Eliminar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              // Icono decorativo con fondo de color
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.assignment_outlined,
+                  color: color,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Contenido
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      tarea.nombreTarea,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: cs.onSurface,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (tarea.notas.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        tarea.notas,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: cs.onSurface.withValues(alpha: 0.5),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                    if (tarea.fecha.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            size: 12,
+                            color: cs.onSurface.withValues(alpha: 0.45),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            tarea.fecha,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: cs.onSurface.withValues(alpha: 0.55),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Botón de check — colorido, a la derecha
+              GestureDetector(
+                onTap: () => _completarPendiente(key),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: cs.onSurface.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: color.withValues(alpha: 0.35),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.check,
+                    color: color.withValues(alpha: 0.4),
+                    size: 24,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Tarjeta de pendiente COMPLETADO — tachado, estilo atenuado
+  Widget _buildCompletadaCard(BuildContext context, dynamic key, Tarea tarea) {
+    final cs = Theme.of(context).colorScheme;
+    final color = _taskColors[tarea.idTarea % _taskColors.length];
+
+    return GestureDetector(
+      onLongPress: () {
+        showDialog(
+          context: context,
+          builder: (BuildContext ctx) {
+            return AlertDialog(
+              title: const Text('Eliminar pendiente'),
+              content: Text('¿Eliminar "${tarea.nombreTarea}"?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancelar'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _eliminarPendiente(key);
+                  },
+                  child: const Text('Eliminar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              // Icono completado (check)
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.check_circle,
+                  color: color.withValues(alpha: 0.5),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Nombre tachado
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      tarea.nombreTarea,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: cs.onSurface.withValues(alpha: 0.4),
+                        decoration: TextDecoration.lineThrough,
+                        decorationColor: cs.onSurface.withValues(alpha: 0.3),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (tarea.fecha.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        tarea.fecha,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: cs.onSurface.withValues(alpha: 0.25),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              // Botón para descompletar (restaurar)
+              GestureDetector(
+                onTap: () => _completarPendiente(key),
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.undo,
+                    color: cs.onSurface.withValues(alpha: 0.3),
+                    size: 18,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tareasActivas = _tareas.where((t) => !t.value.completada).toList();
+    final tareasCompletadas = _tareas.where((t) => t.value.completada).toList();
+
     return Scaffold(
       body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
                 children: [
-                  Text(
-                    'Pendientes',
-                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(
+                      'Pendientes',
+                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                  ),
+                  Expanded(
+                    child: tareasActivas.isEmpty && tareasCompletadas.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.task_alt,
+                                  size: 48,
+                                  color: cs.onSurface.withValues(alpha: 0.15),
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Sin pendientes',
+                                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                        color: cs.onSurface.withValues(alpha: 0.4),
+                                      ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Toca + para agregar uno',
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        color: cs.onSurface.withValues(alpha: 0.25),
+                                      ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView(
+                            padding: const EdgeInsets.only(
+                              left: 16,
+                              right: 16,
+                              bottom: 80,
+                            ),
+                            children: [
+                              // === SECCIÓN: Pendientes activos ===
+                              ...tareasActivas.asMap().entries.map((mapEntry) {
+                                final index = mapEntry.key;
+                                final entry = mapEntry.value;
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: _buildActivaCard(
+                                    context,
+                                    entry.key,
+                                    entry.value,
+                                    index,
+                                  ),
+                                );
+                              }),
+
+                              // === SEPARADOR ===
+                              if (tareasCompletadas.isNotEmpty) ...[
+                                if (tareasActivas.isNotEmpty)
+                                  const SizedBox(height: 8),
+
+                                // Encabezado de sección completados (colapsable)
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _completadosExpanded = !_completadosExpanded;
+                                    });
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 8),
+                                    child: Row(
+                                      children: [
+                                        // Línea decorativa izquierda
+                                        Expanded(
+                                          child: Container(
+                                            height: 1,
+                                            color: cs.onSurface.withValues(alpha: 0.08),
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                _completadosExpanded
+                                                    ? Icons.keyboard_arrow_down
+                                                    : Icons.keyboard_arrow_right,
+                                                size: 18,
+                                                color: cs.onSurface.withValues(alpha: 0.4),
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                'Completados (${tareasCompletadas.length})',
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: cs.onSurface.withValues(alpha: 0.4),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        // Línea decorativa derecha
+                                        Expanded(
+                                          child: Container(
+                                            height: 1,
+                                            color: cs.onSurface.withValues(alpha: 0.08),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+
+                                // Lista de completados (colapsable con animación)
+                                AnimatedCrossFade(
+                                  firstChild: Column(
+                                    children: tareasCompletadas.map((entry) {
+                                      return Padding(
+                                        padding: const EdgeInsets.only(bottom: 8),
+                                        child: _buildCompletadaCard(
+                                          context,
+                                          entry.key,
+                                          entry.value,
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                  secondChild: const SizedBox.shrink(),
+                                  crossFadeState: _completadosExpanded
+                                      ? CrossFadeState.showFirst
+                                      : CrossFadeState.showSecond,
+                                  duration: const Duration(milliseconds: 250),
+                                ),
+                              ],
+                            ],
+                          ),
                   ),
                 ],
               ),
-            ),
-            Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _tareas.isEmpty
-                      ? Center(
-                          child: Text(
-                            'Sin pendientes',
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          itemCount: _tareas.length,
-                          itemBuilder: (context, index) {
-                            final entry = _tareas[index];
-                            final key = entry.key;
-                            final tarea = entry.value;
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: Card(
-                                child: ListTile(
-                                  leading: Checkbox(
-                                    value: tarea.completada,
-                                    onChanged: (_) => _completarPendiente(key),
-                                  ),
-                                  title: Text(
-                                    tarea.nombreTarea,
-                                    style: tarea.completada
-                                        ? const TextStyle(decoration: TextDecoration.lineThrough)
-                                        : null,
-                                  ),
-                                  subtitle: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      if (tarea.fecha.isNotEmpty)
-                                        Text(
-                                          '📅 ${tarea.fecha}',
-                                          style: const TextStyle(fontSize: 11),
-                                        ),
-                                      if (tarea.notas.isNotEmpty)
-                                        Text(
-                                          tarea.notas,
-                                          style: const TextStyle(fontSize: 11),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                    ],
-                                  ),
-                                  trailing: IconButton(
-                                    icon: const Icon(Icons.delete_outline),
-                                    onPressed: () {
-                                      showDialog(
-                                        context: context,
-                                        builder: (ctx) => AlertDialog(
-                                          title: const Text('Eliminar'),
-                                          content: Text(
-                                            '¿Eliminar "${tarea.nombreTarea}"?',
-                                          ),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () => Navigator.pop(ctx),
-                                              child: const Text('Cancelar'),
-                                            ),
-                                            TextButton(
-                                              onPressed: () {
-                                                Navigator.pop(ctx);
-                                                _eliminarPendiente(key, tarea.nombreTarea);
-                                              },
-                                              child: const Text('Eliminar'),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-            ),
-          ],
-        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FloatingActionButton(

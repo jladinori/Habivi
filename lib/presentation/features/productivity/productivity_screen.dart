@@ -42,31 +42,31 @@ class _ProductivityScreenState extends ConsumerState<ProductivityScreen> {
   Future<void> _cargarDatos() async {
     try {
       final sesionesMap = await _repository.readAll();
-      final puntosHoy = await PuntosEstudioService.puntosDeHoy();
-      final puntosSemana = await PuntosEstudioService.puntosDeEstaSemana();
-      final puntosTotales = await PuntosEstudioService.puntosTotales();
+      final minutosHoy = await EstudioService.minutosDeHoy();
+      final minutosSemana = await EstudioService.minutosDeEstaSemana();
+      final minutosTotales = await EstudioService.minutosTotales();
       if (mounted) {
         setState(() {
           _sesiones = sesionesMap.values.toList();
-          _puntosHoy = puntosHoy;
-          _puntosSemana = puntosSemana;
-          _puntosTotales = puntosTotales;
+          _puntosHoy = minutosHoy;
+          _puntosSemana = minutosSemana;
+          _puntosTotales = minutosTotales;
           _isLoading = false;
         });
       }
-      await _syncPuntosProductividad(puntosTotales);
+      await _syncMinutosProductividad(minutosTotales);
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  Future<void> _syncPuntosProductividad(int puntosTotales) async {
+  Future<void> _syncMinutosProductividad(int minutosTotales) async {
     final userRepo = UserRepository();
     final usuarios = await userRepo.readAll();
     if (usuarios.isEmpty) return;
     final firstKey = usuarios.keys.first;
     final usuario = usuarios.values.first;
-    usuario.puntosProductividad = puntosTotales;
+    usuario.puntosProductividad = minutosTotales;
     await userRepo.updateAt(firstKey, usuario);
   }
 
@@ -98,11 +98,6 @@ class _ProductivityScreenState extends ConsumerState<ProductivityScreen> {
                     border: OutlineInputBorder(),
                   ),
                   maxLines: 2,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Puntos base: ${metodo.puntosBasePorHora} pts/hora',
-                  style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
             ),
@@ -140,7 +135,6 @@ class _ProductivityScreenState extends ConsumerState<ProductivityScreen> {
 
     final duracion = resultado['duracion'] as int;
     final nota = resultado['nota'] as String;
-    final puntos = PuntosEstudioService.calcularPuntos(metodo.id, duracion);
     final now = DateTime.now();
     final fechaStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
 
@@ -154,17 +148,17 @@ class _ProductivityScreenState extends ConsumerState<ProductivityScreen> {
         nextId,
         metodo.id,
         duracion,
-        puntos,
+        duracion, // Los "puntos" ahora son los minutos
         fechaStr,
         nota: nota,
       );
       await _repository.add(sesion);
       await _cargarDatos();
-      await _syncPuntosProductividad(_puntosTotales);
+      await _syncMinutosProductividad(_puntosTotales);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('✓ +$puntos puntos por "${metodo.nombre}"'),
+            content: Text('✓ +$duracion minutos en "${metodo.nombre}"'),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -280,9 +274,9 @@ class _ProductivityScreenState extends ConsumerState<ProductivityScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _puntosColumna('Hoy', _puntosHoy, Icons.today),
-                  _puntosColumna('Semana', _puntosSemana, Icons.weekend),
-                  _puntosColumna('Total', _puntosTotales, Icons.stars),
+                  _minutosColumna('Hoy', _puntosHoy),
+                  _minutosColumna('Semana', _puntosSemana),
+                  _minutosColumna('Total', _puntosTotales),
                 ],
               ),
             ),
@@ -322,13 +316,7 @@ class _ProductivityScreenState extends ConsumerState<ProductivityScreen> {
                   metodo.nombre,
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
-                subtitle: Text(
-                  '${metodo.descripcion}\n${metodo.puntosBasePorHora} pts/hora',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white.withValues(alpha: 0.6),
-                  ),
-                ),
+                subtitle: Text(metodo.descripcion),
                 trailing: FilledButton.tonal(
                   onPressed: () => _registrarSesion(metodo),
                   child: const Text('+'),
@@ -351,20 +339,20 @@ class _ProductivityScreenState extends ConsumerState<ProductivityScreen> {
     );
   }
 
-  Widget _puntosColumna(String label, int puntos, IconData icon) {
+  Widget _minutosColumna(String label, int minutos) {
     return Column(
       children: [
-        Icon(icon, color: Theme.of(context).colorScheme.primary, size: 28),
+        Icon(Icons.timer_outlined, color: Theme.of(context).colorScheme.primary, size: 28),
         const SizedBox(height: 8),
         Text(
-          '$puntos',
+          '$minutos',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: Theme.of(context).colorScheme.primary,
               ),
         ),
         Text(
-          label,
+          '$label min',
           style: Theme.of(context).textTheme.bodySmall,
         ),
       ],
