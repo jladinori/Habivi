@@ -5,6 +5,7 @@ import 'package:habivi/data/repositories/habit_repository.dart';
 import 'package:habivi/presentation/shared/widgets/habit_contribution_board.dart';
 import 'package:habivi/core/utils/app_clock.dart';
 import 'package:habivi/presentation/providers/dev_mode_provider.dart';
+import 'package:habivi/presentation/shared/widgets/suggestions_bottom_sheet.dart';
 
 const List<Color> _habitColors = [
   Color(0xFFEC407A), // Pink
@@ -319,7 +320,9 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                       _habitos[index] = MapEntry(habitKey, habito);
                     });
                     Navigator.of(dialogContext).pop();
-                  },                  child: Container(                    decoration: BoxDecoration(
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
@@ -513,6 +516,16 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
     });
   }
 
+  void _mostrarSugerencias(Habito habito) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SuggestionsBottomSheet(
+        habitName: habito.nombreHabito,
+        aspect: habito.aspecto,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -687,16 +700,29 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                                       ],
                                     ),
                                     const SizedBox(height: 16),
+                                    // Tablero de contribuciones del año alineado por semanas
+                                    HabitContributionBoard(
+                                      fechasCompletadas:
+                                          habito.safeFechasCompletadas,
+                                      baseColor: color,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    // === BOTONES DE ACCIÓN ===
                                     Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text(
-                                          'Frecuencia: ${habito.safeVecesPorSemana}/sem',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: cs.onSurface
-                                                .withValues(alpha: 0.55),
+                                        TextButton.icon(
+                                          onPressed: () =>
+                                              _mostrarSugerencias(habito),
+                                          icon: const Icon(Icons.lightbulb,
+                                              size: 16),
+                                          label: const Text('Sugerencias'),
+                                          style: TextButton.styleFrom(
+                                            foregroundColor: Colors.white
+                                                .withValues(alpha: 0.75),
+                                            visualDensity:
+                                                VisualDensity.compact,
                                           ),
                                         ),
                                         TextButton.icon(
@@ -714,13 +740,6 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                                           ),
                                         ),
                                       ],
-                                    ),
-                                    const SizedBox(height: 16),
-                                    // Tablero de contribuciones del año alineado por semanas
-                                    HabitContributionBoard(
-                                      fechasCompletadas:
-                                          habito.safeFechasCompletadas,
-                                      baseColor: color,
                                     ),
                                   ],
                                 ),
