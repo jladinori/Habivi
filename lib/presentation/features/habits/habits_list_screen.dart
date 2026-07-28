@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hive/hive.dart';
 import 'package:habivi/data/models/habito.dart';
 import 'package:habivi/data/repositories/habit_repository.dart';
 import 'package:habivi/presentation/shared/widgets/habit_contribution_board.dart';
@@ -12,6 +13,10 @@ const List<Color> _habitColors = [
   Color(0xFFFFB300), // Yellow/Orange
   Color(0xFF42A5F5), // Blue
   Color(0xFF66BB6A), // Green
+  Color(0xFF7C4DFF), // Purple
+  Color(0xFF00BFA5), // Teal
+  Color(0xFFFF6D00), // Deep Orange
+  Color(0xFFAB47BC), // Purple Accent
 ];
 
 const Map<String, IconData> _disponiblesIconos = {
@@ -35,11 +40,6 @@ const Map<String, IconData> _disponiblesIconos = {
   'star': Icons.star,
 };
 
-const Map<String, List<String>> _iconosPorAspecto = {
-  'físico': ['run', 'gym', 'bike', 'water', 'heart'],
-  'mental': ['book', 'code', 'brain', 'brush', 'lightbulb'],
-  'espiritual': ['spa', 'meditation', 'sleep', 'nature', 'star'],
-};
 
 class HabitsListScreen extends ConsumerStatefulWidget {
   const HabitsListScreen({super.key});
@@ -52,11 +52,80 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
   late HabitRepository _repository;
   List<MapEntry<dynamic, Habito>> _habitos = [];
 
+  // Colores personalizados de secciones (almacenados en Hive)
+  final Map<String, Color> _sectionColors = {
+    'físico': const Color(0xFFEC407A),
+    'mental': const Color(0xFFFFB300),
+    'espiritual': const Color(0xFF66BB6A),
+  };
+
+  // Colores personalizados de cada hábito
+  Map<int, Color> _habitCustomColors = {};
+
   @override
   void initState() {
     super.initState();
     _repository = HabitRepository();
     _loadHabitos();
+    _cargarColoresGuardados();
+  }
+
+  Future<void> _cargarColoresGuardados() async {
+    try {
+      final box = await Hive.openBox('settingsBox');
+
+      final fisVal = box.get('sectionColor_físico');
+      final menVal = box.get('sectionColor_mental');
+      final espVal = box.get('sectionColor_espiritual');
+
+      final Map<int, Color> habitMap = {};
+      for (final entry in _habitos) {
+        final val = box.get('habitColor_${entry.value.idHabito}');
+        if (val != null) {
+          habitMap[entry.value.idHabito] = Color(val as int);
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          if (fisVal != null) _sectionColors['físico'] = Color(fisVal as int);
+          if (menVal != null) _sectionColors['mental'] = Color(menVal as int);
+          if (espVal != null) _sectionColors['espiritual'] = Color(espVal as int);
+          _habitCustomColors = habitMap;
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _guardarColorSeccion(String aspectKey, Color color) async {
+    try {
+      final box = await Hive.openBox('settingsBox');
+      await box.put('sectionColor_$aspectKey', color.toARGB32());
+      if (mounted) {
+        setState(() {
+          _sectionColors[aspectKey] = color;
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _guardarColorHabito(int idHabito, Color color) async {
+    try {
+      final box = await Hive.openBox('settingsBox');
+      await box.put('habitColor_$idHabito', color.toARGB32());
+      if (mounted) {
+        setState(() {
+          _habitCustomColors[idHabito] = color;
+        });
+      }
+    } catch (_) {}
+  }
+
+  Color _obtenerColorHabito(Habito habito) {
+    if (_habitCustomColors.containsKey(habito.idHabito)) {
+      return _habitCustomColors[habito.idHabito]!;
+    }
+    return _habitColors[habito.idHabito % _habitColors.length];
   }
 
   Future<void> _loadHabitos() async {
@@ -66,6 +135,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
         _habitos = habitosMap.entries.toList();
       });
       await _verificarResetearPorDia();
+      await _cargarColoresGuardados();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -213,6 +283,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
 
   void _mostrarDialogoEditarFrecuencia(dynamic key, Habito habito) {
     int frecuencia = habito.safeVecesPorSemana;
+    Color selectedColor = _obtenerColorHabito(habito);
 
     showDialog(
       context: context,
@@ -220,45 +291,79 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             return AlertDialog(
-              title: const Text('Editar frecuencia'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('¿Cuántas veces por semana debería repetirse?'),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      IconButton(
-                        onPressed: () {
-                          if (frecuencia > 1) {
+              title: const Text('Editar hábito'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Frecuencia semanal', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          onPressed: () {
+                            if (frecuencia > 1) {
+                              setStateDialog(() {
+                                frecuencia--;
+                              });
+                            }
+                          },
+                          icon: const Icon(Icons.remove),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          '$frecuencia',
+                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(width: 12),
+                        IconButton(
+                          onPressed: () {
+                            if (frecuencia < 7) {
+                              setStateDialog(() {
+                                frecuencia++;
+                              });
+                            }
+                          },
+                          icon: const Icon(Icons.add),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    const Text('Color del hábito', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _habitColors.map((color) {
+                        final isSelected = selectedColor.toARGB32() == color.toARGB32();
+                        return InkWell(
+                          onTap: () {
                             setStateDialog(() {
-                              frecuencia--;
+                              selectedColor = color;
                             });
-                          }
-                        },
-                        icon: const Icon(Icons.remove),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        '$frecuencia',
-                        style: const TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(width: 12),
-                      IconButton(
-                        onPressed: () {
-                          if (frecuencia < 7) {
-                            setStateDialog(() {
-                              frecuencia++;
-                            });
-                          }
-                        },
-                        icon: const Icon(Icons.add),
-                      ),
-                    ],
-                  ),
-                ],
+                          },
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: color,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: isSelected ? Colors.white : Colors.transparent,
+                                width: 2.5,
+                              ),
+                            ),
+                            child: isSelected
+                                ? const Icon(Icons.check, color: Colors.white, size: 18)
+                                : null,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
               ),
               actions: [
                 TextButton(
@@ -270,6 +375,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                     final dialogContext = context;
                     habito.vecesPorSemana = frecuencia;
                     await _repository.update(key, habito);
+                    await _guardarColorHabito(habito.idHabito, selectedColor);
                     await _loadHabitos();
                     if (dialogContext.mounted) {
                       Navigator.of(dialogContext).pop();
@@ -285,56 +391,51 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
     );
   }
 
-  void _mostrarSelectorIconos(dynamic habitKey, Habito habito) {
-    final color = _habitColors[habito.idHabito % _habitColors.length];
-    final aspectoNorm = _normalizarAspecto(habito.aspecto);
-    final listIconos =
-        _iconosPorAspecto[aspectoNorm] ?? _iconosPorAspecto['físico']!;
-
+  /// Selector de color de sección (al presionar la sección)
+  void _mostrarSelectorColorSeccion(String aspectKey, String title) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Selector de íconos (${habito.aspecto})'),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: GridView.builder(
-              shrinkWrap: true,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 5,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-              ),
-              itemCount: listIconos.length,
-              itemBuilder: (context, i) {
-                final key = listIconos[i];
-                final icon = _disponiblesIconos[key]!;
-                final esSeleccionado = habito.iconoKey == key;
-
-                return InkWell(
-                  onTap: () async {
-                    final dialogContext = context;
-                    habito.iconoKey = key;
-                    await _repository.update(habitKey, habito);
-                    await _loadHabitos();
-                    if (dialogContext.mounted) {
-                      Navigator.of(dialogContext).pop();
-                    }
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: esSeleccionado ? color : Colors.transparent,
-                        width: 1.5,
-                      ),
+          title: Text('Cambiar color de sección $title'),
+          content: Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            alignment: WrapAlignment.center,
+            children: _habitColors.map((color) {
+              final esSeleccionado =
+                  (_sectionColors[aspectKey] ?? const Color(0xFFEC407A)).toARGB32() == color.toARGB32();
+              return InkWell(
+                onTap: () {
+                  _guardarColorSeccion(aspectKey, color);
+                  Navigator.pop(context);
+                },
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: esSeleccionado ? Colors.white : Colors.transparent,
+                      width: 2.5,
                     ),
-                    child: Icon(icon, color: Theme.of(context).colorScheme.onSurface),
+                    boxShadow: esSeleccionado
+                        ? [
+                            BoxShadow(
+                              color: color.withValues(alpha: 0.5),
+                              blurRadius: 8,
+                              spreadRadius: 2,
+                            ),
+                          ]
+                        : null,
                   ),
-                );
-              },
-            ),
+                  child: esSeleccionado
+                      ? const Icon(Icons.check, color: Colors.white, size: 22)
+                      : null,
+                ),
+              );
+            }).toList(),
           ),
           actions: [
             TextButton(
@@ -516,7 +617,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
     });
   }
 
-  /// Encabezado elegante de sección con botón de Sugerencias a la derecha (estilo foto de referencia)
+  /// Encabezado de sección con soporte de cambio de color al presionar (onTap)
   Widget _buildSectionHeader(
     BuildContext context, {
     required String aspectKey,
@@ -533,55 +634,58 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Icono circular + Título grande y Subtítulo
+          // Icono circular + Título grande y Subtítulo (Presionar para cambiar color)
           Expanded(
-            child: Row(
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: sectionColor.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
+            child: GestureDetector(
+              onTap: () => _mostrarSelectorColorSeccion(aspectKey, title),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: sectionColor.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      iconData,
+                      color: sectionColor,
+                      size: 24,
+                    ),
                   ),
-                  child: Icon(
-                    iconData,
-                    color: sectionColor,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          color: sectionColor,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            color: sectionColor,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: cs.onSurface.withValues(alpha: 0.6),
-                          height: 1.2,
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: cs.onSurface.withValues(alpha: 0.6),
+                            height: 1.2,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           const SizedBox(width: 10),
-          // Botón / Card de Sugerencias a la derecha con borde coloreado e icono 💡
+          // Botón / Card de Sugerencias a la derecha (Presionar abre sugerencias)
           InkWell(
             borderRadius: BorderRadius.circular(12),
             onTap: () {
@@ -594,15 +698,15 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
               );
             },
             child: Container(
-              width: 155,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              width: 165,
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: cs.surfaceContainerHighest.withValues(alpha: 0.35),
                 borderRadius: BorderRadius.circular(12),
                 border: Border(
                   left: BorderSide(
                     color: sectionColor,
-                    width: 3,
+                    width: 3.5,
                   ),
                 ),
               ),
@@ -625,7 +729,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                           Text(
                             'Sugerencias',
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: 11.5,
                               fontWeight: FontWeight.bold,
                               color: cs.onSurface,
                             ),
@@ -643,11 +747,11 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                   Text(
                     tipText,
                     style: TextStyle(
-                      fontSize: 9.5,
-                      color: cs.onSurface.withValues(alpha: 0.6),
-                      height: 1.15,
+                      fontSize: 10,
+                      color: cs.onSurface.withValues(alpha: 0.65),
+                      height: 1.2,
                     ),
-                    maxLines: 2,
+                    maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
@@ -701,14 +805,14 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
     );
   }
 
-  /// Tarjeta individual de hábito limpia y profesional
+  /// Tarjeta individual de hábito con el botón de EDITAR en la parte superior derecha junto a la checkbox
   Widget _buildHabitCard(
     BuildContext context,
     MapEntry<dynamic, Habito> entry,
   ) {
     final cs = Theme.of(context).colorScheme;
     final habito = entry.value;
-    final color = _habitColors[habito.idHabito % _habitColors.length];
+    final color = _obtenerColorHabito(habito);
     final icon = _getIconForHabit(habito);
 
     return Padding(
@@ -748,25 +852,22 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
               children: [
                 Row(
                   children: [
-                    // Icono decorado con fondo opaco y selector interactivo al pulsar
-                    GestureDetector(
-                      onTap: () => _mostrarSelectorIconos(entry.key, habito),
-                      child: Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(
-                          icon,
-                          color: color,
-                          size: 24,
-                        ),
+                    // Icono del hábito
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        icon,
+                        color: color,
+                        size: 24,
                       ),
                     ),
                     const SizedBox(width: 12),
-                    // Título y descripción (atributo)
+                    // Título y detalles
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -803,7 +904,19 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 6),
+                    // === BOTÓN EDITAR EN LA PARTE SUPERIOR (Al lado del botón de check) ===
+                    IconButton(
+                      icon: Icon(
+                        Icons.edit_outlined,
+                        size: 20,
+                        color: cs.onSurface.withValues(alpha: 0.55),
+                      ),
+                      tooltip: 'Editar hábito',
+                      onPressed: () => _mostrarDialogoEditarFrecuencia(
+                          entry.key, habito),
+                    ),
+                    const SizedBox(width: 2),
                     // Checkbox redondeada
                     GestureDetector(
                       onTap: () => _marcarCompletado(entry.key, habito),
@@ -840,21 +953,6 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                   fechasCompletadas: habito.safeFechasCompletadas,
                   baseColor: color,
                 ),
-                const SizedBox(height: 8),
-                // === BOTÓN EDITAR ===
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton.icon(
-                    onPressed: () => _mostrarDialogoEditarFrecuencia(
-                        entry.key, habito),
-                    icon: const Icon(Icons.edit, size: 16),
-                    label: const Text('Editar'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: cs.onSurface.withValues(alpha: 0.75),
-                      visualDensity: VisualDensity.compact,
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
@@ -869,7 +967,6 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
       _loadHabitos();
     });
 
-    // Separar los hábitos por sección normalizada
     final habitosFisico = _habitos
         .where((e) => _normalizarAspecto(e.value.aspecto) == 'físico')
         .toList();
@@ -879,6 +976,10 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
     final habitosAlma = _habitos
         .where((e) => _normalizarAspecto(e.value.aspecto) == 'espiritual')
         .toList();
+
+    final colorFisico = _sectionColors['físico'] ?? const Color(0xFFEC407A);
+    final colorMental = _sectionColors['mental'] ?? const Color(0xFFFFB300);
+    final colorAlma = _sectionColors['espiritual'] ?? const Color(0xFF66BB6A);
 
     return Scaffold(
       body: SafeArea(
@@ -905,13 +1006,13 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                     title: 'Físico',
                     subtitle: 'Cuida tu cuerpo, mejora tu energía y salud.',
                     iconData: Icons.directions_run,
-                    sectionColor: const Color(0xFFEC407A), // Magenta / Rosa
+                    sectionColor: colorFisico,
                     tipText: 'Intenta mantenerte activo todos los días, aunque sea 10 minutos.',
                   ),
                   if (habitosFisico.isEmpty)
                     _buildEmptySection(
                       context,
-                      sectionColor: const Color(0xFFEC407A),
+                      sectionColor: colorFisico,
                       iconData: Icons.directions_run,
                       message: '¡Cuida tu cuerpo! Agrega tu primer hábito en la sección Físico presionando +.',
                     )
@@ -927,13 +1028,13 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                     title: 'Mental',
                     subtitle: 'Entrena tu mente, aprende y enfócate.',
                     iconData: Icons.psychology,
-                    sectionColor: const Color(0xFFFFB300), // Ámbar / Naranja
+                    sectionColor: colorMental,
                     tipText: 'Dedica 15 minutos a la lectura o aprender algo nuevo hoy.',
                   ),
                   if (habitosMental.isEmpty)
                     _buildEmptySection(
                       context,
-                      sectionColor: const Color(0xFFFFB300),
+                      sectionColor: colorMental,
                       iconData: Icons.psychology,
                       message: '¡Entrena tu mente! Agrega tu primer hábito en la sección Mental presionando +.',
                     )
@@ -949,13 +1050,13 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                     title: 'Alma',
                     subtitle: 'Nutre tu paz interior, propósito y gratitud.',
                     iconData: Icons.spa,
-                    sectionColor: const Color(0xFF66BB6A), // Verde
+                    sectionColor: colorAlma,
                     tipText: 'Realiza 5 minutos de meditación o gratitud al despertar.',
                   ),
                   if (habitosAlma.isEmpty)
                     _buildEmptySection(
                       context,
-                      sectionColor: const Color(0xFF66BB6A),
+                      sectionColor: colorAlma,
                       iconData: Icons.spa,
                       message: '¡Nutre tu paz interior! Agrega tu primer hábito en la sección Alma presionando +.',
                     )
