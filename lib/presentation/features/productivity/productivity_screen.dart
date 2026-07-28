@@ -17,6 +17,16 @@ const Map<String, IconData> _iconosMetodo = {
   'tree': Icons.account_tree_outlined,
 };
 
+const List<Color> _metodoColores = [
+  Color(0xFFEC407A), // Pink
+  Color(0xFF7C4DFF), // Purple
+  Color(0xFF448AFF), // Blue
+  Color(0xFF00BFA5), // Teal
+  Color(0xFFFFB300), // Amber
+  Color(0xFF66BB6A), // Green
+  Color(0xFFFF6D00), // Orange
+];
+
 class ProductivityScreen extends ConsumerStatefulWidget {
   const ProductivityScreen({super.key});
 
@@ -173,6 +183,9 @@ class _ProductivityScreenState extends ConsumerState<ProductivityScreen> {
   }
 
   void _abrirPantallaInfo(MetodoEstudioInfo metodo) {
+    // Cerrar el bottom sheet primero
+    Navigator.of(context).pop();
+
     switch (metodo.id) {
       case 'pomodoro':
         context.push('/productivity/pomodoro-info');
@@ -203,6 +216,153 @@ class _ProductivityScreenState extends ConsumerState<ProductivityScreen> {
     }
   }
 
+  /// Bottom sheet con todos los métodos de estudio
+  void _mostrarMetodos() {
+    final cs = Theme.of(context).colorScheme;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(ctx).size.height * 0.75,
+          ),
+          decoration: BoxDecoration(
+            color: cs.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Asa
+              Padding(
+                padding: const EdgeInsets.only(top: 12, bottom: 8),
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: cs.onSurface.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              // Título
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                child: Row(
+                  children: [
+                    Icon(Icons.school_outlined, color: cs.primary, size: 24),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Métodos de estudio',
+                      style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 4),
+              // Lista de métodos
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                  itemCount: EstudioService.metodos.length,
+                  itemBuilder: (context, index) {
+                    final metodo = EstudioService.metodos[index];
+                    final color = _metodoColores[index % _metodoColores.length];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: Card(
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () => _abrirPantallaInfo(metodo),
+                          child: Padding(
+                            padding: const EdgeInsets.all(14),
+                            child: Row(
+                              children: [
+                                // Icono decorativo
+                                Container(
+                                  width: 48,
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    color: color.withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(
+                                    _iconosMetodo[metodo.iconoKey] ?? Icons.school,
+                                    color: color,
+                                    size: 26,
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                // Texto
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        metodo.nombre,
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 3),
+                                      Text(
+                                        metodo.descripcion,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: cs.onSurfaceVariant,
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                // Botón "+" para añadir tiempo de concentración
+                                IconButton(
+                                  style: IconButton.styleFrom(
+                                    backgroundColor: color.withValues(alpha: 0.15),
+                                    foregroundColor: color,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                  icon: const Icon(Icons.add, size: 20),
+                                  tooltip: 'Añadir tiempo',
+                                  onPressed: () {
+                                    Navigator.of(ctx).pop();
+                                    _registrarSesion(metodo);
+                                  },
+                                ),
+                                const SizedBox(width: 4),
+                                // Flecha para ver explicación
+                                Icon(
+                                  Icons.chevron_right,
+                                  size: 20,
+                                  color: cs.onSurface.withValues(alpha: 0.3),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   void _mostrarHistorial() {
     showModalBottomSheet(
       context: context,
@@ -223,7 +383,7 @@ class _ProductivityScreenState extends ConsumerState<ProductivityScreen> {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.3),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -255,9 +415,19 @@ class _ProductivityScreenState extends ConsumerState<ProductivityScreen> {
                               leading: CircleAvatar(
                                 backgroundColor:
                                     Theme.of(context).colorScheme.primaryContainer,
-                                child: Text(
-                                  '${s.puntosObtenidos}',
-                                  style: const TextStyle(fontSize: 12),
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(4.0),
+                                    child: Text(
+                                      '${s.duracionMinutos}m',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
                               title: Text(nombreMetodo),
@@ -287,77 +457,167 @@ class _ProductivityScreenState extends ConsumerState<ProductivityScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        const SizedBox(height: 16),
-        Text(
-          'Productividad',
-          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-        const SizedBox(height: 24),
-        if (!_isLoading)
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _minutosColumna('Hoy', _puntosHoy),
-                  _minutosColumna('Semana', _puntosSemana),
-                  _minutosColumna('Total', _puntosTotales),
-                ],
-              ),
-            ),
-          ),
-        const SizedBox(height: 20),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    final cs = Theme.of(context).colorScheme;
+
+    return Scaffold(
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
           children: [
+            const SizedBox(height: 16),
             Text(
-              'Métodos de estudio',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              'Productividad',
+              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
             ),
-            TextButton.icon(
-              onPressed: _mostrarHistorial,
-              icon: const Icon(Icons.history, size: 18),
-              label: const Text('Historial'),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        ...PuntosEstudioService.metodos.map(
-          (metodo) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Card(
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor:
-                      Theme.of(context).colorScheme.primaryContainer,
-                  child: Icon(
-                    _iconosMetodo[metodo.iconoKey] ?? Icons.school,
-                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+            const SizedBox(height: 24),
+            // === TARJETA DE RESUMEN DE MINUTOS ===
+            if (!_isLoading)
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _minutosColumna('Hoy', _puntosHoy),
+                      _minutosColumna('Semana', _puntosSemana),
+                      _minutosColumna('Total', _puntosTotales),
+                    ],
                   ),
                 ),
-                title: Text(
-                  metodo.nombre,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+            const SizedBox(height: 20),
+            // === HISTORIAL BOTÓN ===
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Sesiones recientes',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
-                subtitle: Text(metodo.descripcion),
-                trailing: FilledButton.tonal(
-                  onPressed: () => _abrirPantallaInfo(metodo),
-                  child: const Text('+'),
+                TextButton.icon(
+                  onPressed: _mostrarHistorial,
+                  icon: const Icon(Icons.history, size: 18),
+                  label: const Text('Ver todo'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            // === ÚLTIMAS 5 SESIONES ===
+            if (!_isLoading && _sesiones.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 32),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.school_outlined,
+                        size: 48,
+                        color: cs.onSurface.withValues(alpha: 0.15),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Sin sesiones registradas',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              color: cs.onSurface.withValues(alpha: 0.4),
+                            ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Toca + para elegir un método de estudio',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: cs.onSurface.withValues(alpha: 0.25),
+                            ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ),
+            if (!_isLoading && _sesiones.isNotEmpty)
+              ..._sesiones.reversed.take(5).map((s) {
+                final metodo = PuntosEstudioService.buscarMetodo(s.metodo);
+                final nombreMetodo = metodo?.nombre ?? s.metodo;
+                final metodoIndex = EstudioService.metodos.indexWhere((m) => m.id == s.metodo);
+                final color = metodoIndex >= 0
+                    ? _metodoColores[metodoIndex % _metodoColores.length]
+                    : cs.primary;
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              _iconosMetodo[metodo?.iconoKey] ?? Icons.school,
+                              color: color,
+                              size: 22,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  nombreMetodo,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${s.duracionMinutos} min • ${s.fecha}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: cs.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '${s.duracionMinutos}m',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: color,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            const SizedBox(height: 80), // Espacio para el FAB
+          ],
         ),
-        const SizedBox(height: 32),
-      ],
+      ),
+      // === FAB: Botón flotante para abrir métodos ===
+      floatingActionButton: FloatingActionButton(
+        onPressed: _mostrarMetodos,
+        child: const Icon(Icons.add),
+      ),
     );
   }
 
