@@ -65,9 +65,10 @@ class HabitMoodService {
   static String getMoodState(double percentage) {
     final percent = (percentage * 100).toInt();
     if (percent >= 80) return 'Feliz 😊';
-    if (percent >= 60) return 'Normal 😐';
-    if (percent >= 40) return 'Triste 😔';
-    if (percent >= 20) return 'Frustrado 😠';
+    if (percent >= 70) return 'Normal 😐';
+    if (percent >= 50) return 'Enojado 😠';
+    if (percent >= 35) return 'Frustrado 😤';
+    if (percent >= 20) return 'Triste 😔';
     return 'Sin Energía 😴';
   }
 
@@ -75,9 +76,10 @@ class HabitMoodService {
   static String getMoodVideo(double percentage) {
     final percent = (percentage * 100).toInt();
     if (percent >= 80) return 'assets/images/feliz.mp4';
-    if (percent >= 60) return 'assets/images/enojado.mp4';
-    if (percent >= 40) return 'assets/images/triste.mp4';
-    if (percent >= 20) return 'assets/images/frustado.mp4';
+    if (percent >= 70) return 'assets/images/normal.mp4';
+    if (percent >= 50) return 'assets/images/enojado.mp4';
+    if (percent >= 35) return 'assets/images/frustado.mp4';
+    if (percent >= 20) return 'assets/images/triste.mp4';
     return 'assets/images/sinenergia.mp4';
   }
   /// Retorna el color según el estado de ánimo
@@ -85,9 +87,10 @@ class HabitMoodService {
   static Color getGlowColor(double percentage) {
     final percent = (percentage * 100).toInt();
     if (percent >= 80) return const Color(0xFFFFA000);
-    if (percent >= 60) return const Color(0xFFEF5350);
-    if (percent >= 40) return const Color(0xFF5C8DBC);
-    if (percent >= 20) return const Color.fromARGB(235, 198, 56, 227);
+    if (percent >= 70) return const Color(0xFF80CBC4);
+    if (percent >= 50) return const Color(0xFFEF5350);
+    if (percent >= 35) return const Color.fromARGB(235, 198, 56, 227);
+    if (percent >= 20) return const Color(0xFF5C8DBC);
     return const Color(0xFF78909C);
   }
 }
