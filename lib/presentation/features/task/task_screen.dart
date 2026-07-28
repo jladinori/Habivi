@@ -24,6 +24,7 @@ class _TaskScreenState extends State<TaskScreen> with TickerProviderStateMixin {
   List<MapEntry<dynamic, Tarea>> _tareas = [];
   bool _isLoading = true;
   bool _completadosExpanded = true;
+  bool _archivadosExpanded = false;
 
   @override
   void initState() {
@@ -112,6 +113,30 @@ class _TaskScreenState extends State<TaskScreen> with TickerProviderStateMixin {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('✓ Eliminado')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _archivarPendiente(dynamic key) async {
+    try {
+      final box = await _repository.box;
+      final tarea = box.get(key);
+      if (tarea != null) {
+        tarea.archivada = !(tarea.archivada);
+        await box.put(key, tarea);
+        await box.flush();
+      }
+      await _cargarTareas();
+      if (mounted && tarea != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(tarea.archivada ? '✓ Archivado' : '✓ Restaurado')),
         );
       }
     } catch (e) {
@@ -347,6 +372,24 @@ class _TaskScreenState extends State<TaskScreen> with TickerProviderStateMixin {
                   ),
                 ),
               ),
+              const SizedBox(width: 8),
+              // Botón archivar
+              GestureDetector(
+                onTap: () => _archivarPendiente(key),
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: cs.onSurface.withValues(alpha: 0.02),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.archive_outlined,
+                    color: cs.onSurface.withValues(alpha: 0.45),
+                    size: 20,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -450,6 +493,124 @@ class _TaskScreenState extends State<TaskScreen> with TickerProviderStateMixin {
                   ),
                 ),
               ),
+              const SizedBox(width: 8),
+              // Botón desarchivar (restaurar de archivados)
+              GestureDetector(
+                onTap: () => _archivarPendiente(key),
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: cs.onSurface.withValues(alpha: 0.02),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.unarchive_outlined,
+                    color: cs.onSurface.withValues(alpha: 0.45),
+                    size: 18,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Tarjeta de pendiente ARCHIVADO — estilo atenuado y con opción de restaurar
+  Widget _buildArchivadaCard(BuildContext context, dynamic key, Tarea tarea) {
+    final cs = Theme.of(context).colorScheme;
+    final color = _taskColors[tarea.idTarea % _taskColors.length];
+
+    return GestureDetector(
+      onLongPress: () {
+        showDialog(
+          context: context,
+          builder: (BuildContext ctx) {
+            return AlertDialog(
+              title: const Text('Eliminar pendiente'),
+              content: Text('¿Eliminar "${tarea.nombreTarea}"?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancelar'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _eliminarPendiente(key);
+                  },
+                  child: const Text('Eliminar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+      child: Card(
+        color: cs.surfaceVariant,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.archive,
+                  color: color.withValues(alpha: 0.5),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      tarea.nombreTarea,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: cs.onSurface.withValues(alpha: 0.5),
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (tarea.fecha.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        tarea.fecha,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: cs.onSurface.withValues(alpha: 0.3),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: () => _archivarPendiente(key),
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: cs.onSurface.withValues(alpha: 0.02),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.unarchive_outlined,
+                    color: cs.onSurface.withValues(alpha: 0.45),
+                    size: 18,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -460,8 +621,9 @@ class _TaskScreenState extends State<TaskScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final tareasActivas = _tareas.where((t) => !t.value.completada).toList();
-    final tareasCompletadas = _tareas.where((t) => t.value.completada).toList();
+    final tareasActivas = _tareas.where((t) => !t.value.completada && !t.value.archivada).toList();
+    final tareasCompletadas = _tareas.where((t) => t.value.completada && !t.value.archivada).toList();
+    final tareasArchivadas = _tareas.where((t) => t.value.archivada).toList();
 
     return Scaffold(
       body: SafeArea(
@@ -479,7 +641,7 @@ class _TaskScreenState extends State<TaskScreen> with TickerProviderStateMixin {
                     ),
                   ),
                   Expanded(
-                    child: tareasActivas.isEmpty && tareasCompletadas.isEmpty
+                    child: tareasActivas.isEmpty && tareasCompletadas.isEmpty && tareasArchivadas.isEmpty
                         ? Center(
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
@@ -603,6 +765,80 @@ class _TaskScreenState extends State<TaskScreen> with TickerProviderStateMixin {
                                   ),
                                   secondChild: const SizedBox.shrink(),
                                   crossFadeState: _completadosExpanded
+                                      ? CrossFadeState.showFirst
+                                      : CrossFadeState.showSecond,
+                                  duration: const Duration(milliseconds: 250),
+                                ),
+                              ],
+
+                              // === ARCHIVADOS ===
+                              if (tareasArchivadas.isNotEmpty) ...[
+                                const SizedBox(height: 12),
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _archivadosExpanded = !_archivadosExpanded;
+                                    });
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 8),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Container(
+                                            height: 1,
+                                            color: cs.onSurface.withValues(alpha: 0.08),
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                _archivadosExpanded
+                                                    ? Icons.keyboard_arrow_down
+                                                    : Icons.keyboard_arrow_right,
+                                                size: 18,
+                                                color: cs.onSurface.withValues(alpha: 0.4),
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                'Archivados (${tareasArchivadas.length})',
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: cs.onSurface.withValues(alpha: 0.4),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Container(
+                                            height: 1,
+                                            color: cs.onSurface.withValues(alpha: 0.08),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+
+                                AnimatedCrossFade(
+                                  firstChild: Container(
+                                    padding: const EdgeInsets.only(bottom: 12),
+                                    child: Column(
+                                      children: tareasArchivadas.map((entry) {
+                                        return Padding(
+                                          padding: const EdgeInsets.only(bottom: 8),
+                                          child: _buildArchivadaCard(context, entry.key, entry.value),
+                                        );
+                                      }).toList(),
+                                    ),
+                                  ),
+                                  secondChild: const SizedBox.shrink(),
+                                  crossFadeState: _archivadosExpanded
                                       ? CrossFadeState.showFirst
                                       : CrossFadeState.showSecond,
                                   duration: const Duration(milliseconds: 250),

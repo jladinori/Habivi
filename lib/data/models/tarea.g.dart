@@ -24,13 +24,14 @@ class TareaAdapter extends TypeAdapter<Tarea> {
       fecha: fields[4] as String,
       notas: fields[5] as String,
       completada: fields[6] as bool,
+      archivada: fields[7] as bool? ?? false,
     );
   }
-
+ 
   @override
   void write(BinaryWriter writer, Tarea obj) {
     writer
-      ..writeByte(7)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.idTarea)
       ..writeByte(1)
@@ -44,7 +45,9 @@ class TareaAdapter extends TypeAdapter<Tarea> {
       ..writeByte(5)
       ..write(obj.notas)
       ..writeByte(6)
-      ..write(obj.completada);
+      ..write(obj.completada)
+      ..writeByte(7)
+      ..write(obj.archivada);
   }
 
   @override

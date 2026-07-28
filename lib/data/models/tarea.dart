@@ -29,6 +29,9 @@ class Tarea {
   @HiveField(6)
   bool completada;
 
+  @HiveField(7)
+  bool archivada;
+  
   Tarea(
     this.idTarea,
     this.nombreTarea,
@@ -37,6 +40,7 @@ class Tarea {
     this.fecha = '',
     this.notas = '',
     this.completada = false,
+    this.archivada = false,
   });
 
   // Helpers para extraer datos
