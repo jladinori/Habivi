@@ -7,6 +7,8 @@ import 'package:habivi/data/repositories/estudio_repository.dart';
 import 'package:habivi/data/repositories/user_repository.dart';
 import 'package:habivi/data/models/sesion_estudio.dart';
 import 'package:habivi/domain/services/puntos_estudio_service.dart';
+import 'package:habivi/core/utils/app_clock.dart';
+import 'package:habivi/presentation/providers/dev_mode_provider.dart';
 
 const Map<String, IconData> _iconosMetodo = {
   'timer': Icons.timer_outlined,
@@ -224,7 +226,7 @@ class _ProductivityScreenState extends ConsumerState<ProductivityScreen> {
 
     final duracion = resultado['duracion'] as int;
     final nota = resultado['nota'] as String;
-    final now = DateTime.now();
+    final now = AppClock.now();
     final fechaStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
 
     try {
@@ -649,7 +651,7 @@ class _ProductivityScreenState extends ConsumerState<ProductivityScreen> {
   }
 
   List<_DayData> _obtenerUltimos7Dias() {
-    final now = DateTime.now();
+    final now = AppClock.now();
     final todayOnly = DateTime(now.year, now.month, now.day);
     final dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
@@ -664,7 +666,7 @@ class _ProductivityScreenState extends ConsumerState<ProductivityScreen> {
         }
       }
 
-      final isToday = d.year == now.year && d.month == now.month && d.day == now.day;
+      final isToday = d.year == todayOnly.year && d.month == todayOnly.month && d.day == todayOnly.day;
       final dayName = dayNames[d.weekday - 1];
 
       return _DayData(
@@ -1224,6 +1226,10 @@ class _ProductivityScreenState extends ConsumerState<ProductivityScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<Duration>(timeOffsetProvider, (previous, next) {
+      _cargarDatos();
+    });
+
     final cs = Theme.of(context).colorScheme;
     final stats = _obtenerEstadisticasMetodos();
 

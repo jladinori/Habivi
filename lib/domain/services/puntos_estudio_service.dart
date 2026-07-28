@@ -1,6 +1,7 @@
 import 'package:hive/hive.dart';
 import 'package:habivi/core/constants/hive_box_names.dart';
 import 'package:habivi/data/models/sesion_estudio.dart';
+import 'package:habivi/core/utils/app_clock.dart';
 
 class MetodoEstudioInfo {
   final String id;
@@ -105,12 +106,12 @@ class EstudioService {
   }
 
   static String _fechaHoy() {
-    final now = DateTime.now();
+    final now = AppClock.now();
     return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
   }
 
   static String _inicioSemana() {
-    final now = DateTime.now();
+    final now = AppClock.now();
     final inicio = now.subtract(Duration(days: now.weekday - 1));
     return '${inicio.year}-${inicio.month.toString().padLeft(2, '0')}-${inicio.day.toString().padLeft(2, '0')}';
   }
