@@ -358,12 +358,20 @@ Habivi te acompañará en cada paso. Con consistencia, dedicación y el apoyo de
 **¿Listo para comenzar? 🚀**
 
 ```bash
-git clone https://github.com/tu-usuario/habivi.git
+git clone https://github.com/jladinori/habivi.git
 cd habivi
 flutter pub get
 flutter pub run build_runner build --delete-conflicting-outputs
 flutter run -d chrome
 ```
+
+---
+
+## Créditos
+
+- Animaciones del personaje Ivi: Angel Palacio
+- Página web de Habivi: Angel Palacio
+- Apoyo de diseño de Habivi: Angel Palacio
 
 ---
 

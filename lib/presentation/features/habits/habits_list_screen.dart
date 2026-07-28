@@ -27,7 +27,7 @@ const Map<String, IconData> _disponiblesIconos = {
   'brain': Icons.psychology,
   'brush': Icons.brush,
   'lightbulb': Icons.lightbulb,
-  // Espiritual
+  // Espiritual / Alma
   'spa': Icons.spa,
   'meditation': Icons.self_improvement,
   'sleep': Icons.bedtime,
@@ -107,6 +107,14 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
     return Icons.spa;
   }
 
+  String _normalizarAspecto(String aspecto) {
+    final a = aspecto.toLowerCase();
+    if (a.contains('fis') || a.contains('fís')) return 'físico';
+    if (a.contains('ment')) return 'mental';
+    if (a.contains('espir') || a.contains('alm')) return 'espiritual';
+    return 'físico';
+  }
+
   Future<void> _agregarHabitoDialogo(
     String nombre,
     String descripcion,
@@ -149,10 +157,8 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
     }
   }
 
-  Future<void> _marcarCompletado(int index) async {
+  Future<void> _marcarCompletado(dynamic key, Habito habito) async {
     try {
-      final entry = _habitos[index];
-      final habito = entry.value;
       final hoy = _obtenerFechaHoy();
 
       habito.completadoHoy = !habito.completadoHoy;
@@ -164,15 +170,11 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
       }
       habito.fechasCompletadas = list;
 
-      // fechaUltimoCompletado = la fecha más reciente que QUEDE en la lista
       habito.fechaUltimoCompletado =
           list.isEmpty ? '' : list.reduce((a, b) => a.compareTo(b) > 0 ? a : b);
 
-      // Guardar el cambio en la BD local
-      await _repository.update(entry.key, habito);
-      setState(() {
-        _habitos[index] = MapEntry(entry.key, habito);
-      });
+      await _repository.update(key, habito);
+      await _loadHabitos();
 
       if (mounted && habito.completadoHoy) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -191,9 +193,8 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
     }
   }
 
-  Future<void> _deleteHabito(int index) async {
+  Future<void> _deleteHabito(dynamic key) async {
     try {
-      final key = _habitos[index].key;
       await _repository.delete(key);
       await _loadHabitos();
       if (mounted) {
@@ -210,7 +211,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
     }
   }
 
-  void _mostrarDialogoEditarFrecuencia(int index, dynamic key, Habito habito) {
+  void _mostrarDialogoEditarFrecuencia(dynamic key, Habito habito) {
     int frecuencia = habito.safeVecesPorSemana;
 
     showDialog(
@@ -269,11 +270,10 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                     final dialogContext = context;
                     habito.vecesPorSemana = frecuencia;
                     await _repository.update(key, habito);
-                    if (!dialogContext.mounted) return;
-                    setState(() {
-                      _habitos[index] = MapEntry(key, habito);
-                    });
-                    Navigator.of(dialogContext).pop();
+                    await _loadHabitos();
+                    if (dialogContext.mounted) {
+                      Navigator.of(dialogContext).pop();
+                    }
                   },
                   child: const Text('Guardar'),
                 ),
@@ -285,10 +285,11 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
     );
   }
 
-  void _mostrarSelectorIconos(int index, dynamic habitKey, Habito habito) {
+  void _mostrarSelectorIconos(dynamic habitKey, Habito habito) {
     final color = _habitColors[habito.idHabito % _habitColors.length];
+    final aspectoNorm = _normalizarAspecto(habito.aspecto);
     final listIconos =
-        _iconosPorAspecto[habito.aspecto] ?? _iconosPorAspecto['físico']!;
+        _iconosPorAspecto[aspectoNorm] ?? _iconosPorAspecto['físico']!;
 
     showDialog(
       context: context,
@@ -315,11 +316,10 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                     final dialogContext = context;
                     habito.iconoKey = key;
                     await _repository.update(habitKey, habito);
-                    if (!dialogContext.mounted) return;
-                    setState(() {
-                      _habitos[index] = MapEntry(habitKey, habito);
-                    });
-                    Navigator.of(dialogContext).pop();
+                    await _loadHabitos();
+                    if (dialogContext.mounted) {
+                      Navigator.of(dialogContext).pop();
+                    }
                   },
                   child: Container(
                     decoration: BoxDecoration(
@@ -384,7 +384,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                     const Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        'Aspecto:',
+                        'Sección:',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -417,7 +417,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                           },
                         ),
                         ChoiceChip(
-                          label: const Text('Espiritual'),
+                          label: const Text('Alma'),
                           selected: seleccionadoAspecto == 'espiritual',
                           onSelected: (selected) {
                             if (selected) {
@@ -516,22 +516,370 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
     });
   }
 
-  void _mostrarSugerencias(Habito habito) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => SuggestionsBottomSheet(
-        habitName: habito.nombreHabito,
-        aspect: habito.aspecto,
+  /// Encabezado elegante de sección con botón de Sugerencias a la derecha (estilo foto de referencia)
+  Widget _buildSectionHeader(
+    BuildContext context, {
+    required String aspectKey,
+    required String title,
+    required String subtitle,
+    required IconData iconData,
+    required Color sectionColor,
+    required String tipText,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Icono circular + Título grande y Subtítulo
+          Expanded(
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: sectionColor.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    iconData,
+                    color: sectionColor,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          color: sectionColor,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: cs.onSurface.withValues(alpha: 0.6),
+                          height: 1.2,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          // Botón / Card de Sugerencias a la derecha con borde coloreado e icono 💡
+          InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () {
+              showModalBottomSheet(
+                context: context,
+                builder: (context) => SuggestionsBottomSheet(
+                  habitName: title,
+                  aspect: aspectKey,
+                ),
+              );
+            },
+            child: Container(
+              width: 155,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: cs.surfaceContainerHighest.withValues(alpha: 0.35),
+                borderRadius: BorderRadius.circular(12),
+                border: Border(
+                  left: BorderSide(
+                    color: sectionColor,
+                    width: 3,
+                  ),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.lightbulb_outline,
+                            color: sectionColor,
+                            size: 14,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Sugerencias',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: cs.onSurface,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Icon(
+                        Icons.chevron_right,
+                        color: sectionColor,
+                        size: 16,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    tipText,
+                    style: TextStyle(
+                      fontSize: 9.5,
+                      color: cs.onSurface.withValues(alpha: 0.6),
+                      height: 1.15,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Tarjeta de estado vacío para cuando una sección no tiene hábitos creados
+  Widget _buildEmptySection(
+    BuildContext context, {
+    required Color sectionColor,
+    required IconData iconData,
+    required String message,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: sectionColor.withValues(alpha: 0.15),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            iconData,
+            size: 26,
+            color: sectionColor.withValues(alpha: 0.4),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                fontSize: 12.5,
+                color: cs.onSurface.withValues(alpha: 0.55),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Tarjeta individual de hábito limpia y profesional
+  Widget _buildHabitCard(
+    BuildContext context,
+    MapEntry<dynamic, Habito> entry,
+  ) {
+    final cs = Theme.of(context).colorScheme;
+    final habito = entry.value;
+    final color = _habitColors[habito.idHabito % _habitColors.length];
+    final icon = _getIconForHabit(habito);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: GestureDetector(
+        onLongPress: () {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text('Eliminar hábito'),
+                content: Text(
+                  '¿Eliminar "${habito.nombreHabito}"?',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cancelar'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      _deleteHabito(entry.key);
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Eliminar'),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+        child: Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    // Icono decorado con fondo opaco y selector interactivo al pulsar
+                    GestureDetector(
+                      onTap: () => _mostrarSelectorIconos(entry.key, habito),
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          icon,
+                          color: color,
+                          size: 24,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // Título y descripción (atributo)
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            habito.nombreHabito,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: cs.onSurface,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Repite ${habito.safeVecesPorSemana} veces/semana',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: cs.onSurface.withValues(alpha: 0.55),
+                            ),
+                          ),
+                          Text(
+                            habito.atributo.isNotEmpty
+                                ? habito.atributo
+                                : 'Cada día cuenta para mejorar.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: cs.onSurface.withValues(alpha: 0.5),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Checkbox redondeada
+                    GestureDetector(
+                      onTap: () => _marcarCompletado(entry.key, habito),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: habito.completadoHoy
+                              ? color
+                              : cs.onSurface.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: habito.completadoHoy
+                                ? Colors.transparent
+                                : cs.onSurface.withValues(alpha: 0.15),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.check,
+                          color: habito.completadoHoy
+                              ? Colors.white
+                              : cs.onSurface.withValues(alpha: 0.05),
+                          size: 24,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                // Tablero de contribuciones del año alineado por semanas
+                HabitContributionBoard(
+                  fechasCompletadas: habito.safeFechasCompletadas,
+                  baseColor: color,
+                ),
+                const SizedBox(height: 8),
+                // === BOTÓN EDITAR ===
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: () => _mostrarDialogoEditarFrecuencia(
+                        entry.key, habito),
+                    icon: const Icon(Icons.edit, size: 16),
+                    label: const Text('Editar'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: cs.onSurface.withValues(alpha: 0.75),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-     ref.listen(timeOffsetProvider, (prev, next) {
+    ref.listen(timeOffsetProvider, (prev, next) {
       _loadHabitos();
     });
+
+    // Separar los hábitos por sección normalizada
+    final habitosFisico = _habitos
+        .where((e) => _normalizarAspecto(e.value.aspecto) == 'físico')
+        .toList();
+    final habitosMental = _habitos
+        .where((e) => _normalizarAspecto(e.value.aspecto) == 'mental')
+        .toList();
+    final habitosAlma = _habitos
+        .where((e) => _normalizarAspecto(e.value.aspecto) == 'espiritual')
+        .toList();
+
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -546,209 +894,75 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
               ),
             ),
             Expanded(
-              child: _habitos.isEmpty
-                  ? Center(
-                      child: Text(
-                        'No hay hábitos aún',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
+              child: ListView(
+                padding: const EdgeInsets.only(
+                    left: 16, right: 16, bottom: 80),
+                children: [
+                  // === 1. SECCIÓN FÍSICO ===
+                  _buildSectionHeader(
+                    context,
+                    aspectKey: 'físico',
+                    title: 'Físico',
+                    subtitle: 'Cuida tu cuerpo, mejora tu energía y salud.',
+                    iconData: Icons.directions_run,
+                    sectionColor: const Color(0xFFEC407A), // Magenta / Rosa
+                    tipText: 'Intenta mantenerte activo todos los días, aunque sea 10 minutos.',
+                  ),
+                  if (habitosFisico.isEmpty)
+                    _buildEmptySection(
+                      context,
+                      sectionColor: const Color(0xFFEC407A),
+                      iconData: Icons.directions_run,
+                      message: '¡Cuida tu cuerpo! Agrega tu primer hábito en la sección Físico presionando +.',
                     )
-                  : ListView.builder(
-                      padding: const EdgeInsets.only(
-                          left: 16, right: 16, bottom: 80),
-                      itemCount: _habitos.length,
-                      itemBuilder: (context, index) {
-                        final entry = _habitos[index];
-                        final habito = entry.value;
-                        final color =
-                            _habitColors[habito.idHabito % _habitColors.length];
-                        final icon = _getIconForHabit(habito);
+                  else
+                    ...habitosFisico.map((entry) => _buildHabitCard(context, entry)),
 
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: GestureDetector(
-                            onLongPress: () {
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return AlertDialog(
-                                    title: const Text('Eliminar hábito'),
-                                    content: Text(
-                                      '¿Eliminar "${habito.nombreHabito}"?',
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: const Text('Cancelar'),
-                                      ),
-                                      TextButton(
-                                        onPressed: () {
-                                          _deleteHabito(index);
-                                          Navigator.pop(context);
-                                        },
-                                        child: const Text('Eliminar'),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              );
-                            },
-                            child: Card(
-                              child: Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        // Icono decorado con fondo opaco y selector interactivo al pulsar
-                                        GestureDetector(
-                                          onTap: () => _mostrarSelectorIconos(
-                                              index, entry.key, habito),
-                                          child: Container(
-                                            width: 44,
-                                            height: 44,
-                                            decoration: BoxDecoration(
-                                              color:
-                                                  color.withValues(alpha: 0.12),
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                            ),
-                                            child: Icon(
-                                              icon,
-                                              color: color,
-                                              size: 24,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        // Título y descripción (atributo)
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                habito.nombreHabito,
-                                                style: TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: cs.onSurface,
-                                                ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                'Repite ${habito.safeVecesPorSemana} veces/semana',
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: cs.onSurface
-                                                      .withValues(alpha: 0.55),
-                                                ),
-                                              ),
-                                              Text(
-                                                habito.atributo.isNotEmpty
-                                                    ? habito.atributo
-                                                    : 'Cada día cuenta para mejorar.',
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: cs.onSurface
-                                                      .withValues(alpha: 0.5),
-                                                ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                              const SizedBox(height: 6),
-                                            ],
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        // Checkbox premium redondeada
-                                        GestureDetector(
-                                          onTap: () => _marcarCompletado(index),
-                                          child: AnimatedContainer(
-                                            duration: const Duration(
-                                                milliseconds: 200),
-                                            width: 44,
-                                            height: 44,
-                                            decoration: BoxDecoration(
-                                              color: habito.completadoHoy
-                                                  ? color
-                                                  : cs.onSurface
-                                                      .withValues(alpha: 0.05),
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              border: Border.all(
-                                                color: habito.completadoHoy
-                                                    ? Colors.transparent
-                                                    : cs.onSurface.withValues(
-                                                        alpha: 0.15),
-                                                width: 1.5,
-                                              ),
-                                            ),
-                                            child: Icon(
-                                              Icons.check,
-                                              color: habito.completadoHoy
-                                                  ? Colors.white
-                                                  : cs.onSurface
-                                                      .withValues(alpha: 0.05),
-                                              size: 24,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 16),
-                                    // Tablero de contribuciones del año alineado por semanas
-                                    HabitContributionBoard(
-                                      fechasCompletadas:
-                                          habito.safeFechasCompletadas,
-                                      baseColor: color,
-                                    ),
-                                    const SizedBox(height: 12),
-                                    // === BOTONES DE ACCIÓN ===
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        TextButton.icon(
-                                          onPressed: () =>
-                                              _mostrarSugerencias(habito),
-                                          icon: const Icon(Icons.lightbulb,
-                                              size: 16),
-                                          label: const Text('Sugerencias'),
-                                          style: TextButton.styleFrom(
-                                            foregroundColor: Colors.white
-                                                .withValues(alpha: 0.75),
-                                            visualDensity:
-                                                VisualDensity.compact,
-                                          ),
-                                        ),
-                                        TextButton.icon(
-                                          onPressed: () =>
-                                              _mostrarDialogoEditarFrecuencia(
-                                                  index, entry.key, habito),
-                                          icon:
-                                              const Icon(Icons.edit, size: 16),
-                                          label: const Text('Editar'),
-                                          style: TextButton.styleFrom(
-                                            foregroundColor: cs.onSurface
-                                                .withValues(alpha: 0.75),
-                                            visualDensity:
-                                                VisualDensity.compact,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
+                  const SizedBox(height: 20),
+
+                  // === 2. SECCIÓN MENTAL ===
+                  _buildSectionHeader(
+                    context,
+                    aspectKey: 'mental',
+                    title: 'Mental',
+                    subtitle: 'Entrena tu mente, aprende y enfócate.',
+                    iconData: Icons.psychology,
+                    sectionColor: const Color(0xFFFFB300), // Ámbar / Naranja
+                    tipText: 'Dedica 15 minutos a la lectura o aprender algo nuevo hoy.',
+                  ),
+                  if (habitosMental.isEmpty)
+                    _buildEmptySection(
+                      context,
+                      sectionColor: const Color(0xFFFFB300),
+                      iconData: Icons.psychology,
+                      message: '¡Entrena tu mente! Agrega tu primer hábito en la sección Mental presionando +.',
+                    )
+                  else
+                    ...habitosMental.map((entry) => _buildHabitCard(context, entry)),
+
+                  const SizedBox(height: 20),
+
+                  // === 3. SECCIÓN ALMA ===
+                  _buildSectionHeader(
+                    context,
+                    aspectKey: 'espiritual',
+                    title: 'Alma',
+                    subtitle: 'Nutre tu paz interior, propósito y gratitud.',
+                    iconData: Icons.spa,
+                    sectionColor: const Color(0xFF66BB6A), // Verde
+                    tipText: 'Realiza 5 minutos de meditación o gratitud al despertar.',
+                  ),
+                  if (habitosAlma.isEmpty)
+                    _buildEmptySection(
+                      context,
+                      sectionColor: const Color(0xFF66BB6A),
+                      iconData: Icons.spa,
+                      message: '¡Nutre tu paz interior! Agrega tu primer hábito en la sección Alma presionando +.',
+                    )
+                  else
+                    ...habitosAlma.map((entry) => _buildHabitCard(context, entry)),
+                ],
+              ),
             ),
           ],
         ),
