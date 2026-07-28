@@ -640,6 +640,14 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                                               ),
                                               const SizedBox(height: 4),
                                               Text(
+                                                'Repite ${habito.safeVecesPorSemana} veces/semana',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: cs.onSurface
+                                                      .withValues(alpha: 0.55),
+                                                ),
+                                              ),
+                                              Text(
                                                 habito.atributo.isNotEmpty
                                                     ? habito.atributo
                                                     : 'Cada día cuenta para mejorar.',

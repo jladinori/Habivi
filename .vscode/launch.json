@@ -2,11 +2,24 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Chrome (puerto fijo 5000)",
+      "name": "Habivi (Chrome - Puerto Fijo 5000)",
       "type": "dart",
       "request": "launch",
+      "program": "lib/main.dart",
       "deviceId": "chrome",
-      "args": ["--web-port=5000"]
+      "args": [
+        "--web-port=5000"
+      ]
+    },
+    {
+      "name": "Habivi (Web Server - Puerto Fijo 5000)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "deviceId": "web-server",
+      "args": [
+        "--web-port=5000"
+      ]
     }
   ]
 }
