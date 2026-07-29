@@ -13,37 +13,33 @@ class RachaIndicator extends ConsumerWidget {
     return SizedBox(
       width: double.infinity,
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          // === RACHA SEMANAL ===
+          // === RACHA DIARIA ===
           Expanded(
-            child: weeklyRachaAsync.when(
-              loading: () => _buildRachaSquare(
+            child: dailyRachaAsync.when(
+              loading: () => _buildRachaCard(
                 emoji: '🔥',
-                label: 'Semanas',
+                label: 'Días',
                 value: '–',
-                color: Colors.purple,
+                gradientColors: const [Color(0xFFFF5722), Color(0xFFFF9800)],
+                isInactiveOrRisk: false,
               ),
-              error: (_, __) => _buildRachaSquare(
+              error: (_, __) => _buildRachaCard(
                 emoji: '🔥',
-                label: 'Semanas',
+                label: 'Días',
                 value: '0',
-                color: Colors.purple,
+                gradientColors: const [Color(0xFFFF5722), Color(0xFFFF9800)],
+                isInactiveOrRisk: true,
               ),
               data: (racha) {
-                if (racha == null) {
-                  return _buildRachaSquare(
-                    emoji: '🔥',
-                    label: 'Semanas',
-                    value: '0',
-                    color: Colors.purple,
-                  );
-                }
-                return _buildRachaSquare(
+                final isZeroOrRisk = racha == null || racha.cantidad == 0 || racha.enRiesgo;
+                final val = racha == null ? '0' : '${racha.cantidad}';
+                return _buildRachaCard(
                   emoji: '🔥',
-                  label: 'Semanas',
-                  value: '${racha.cantidad}',
-                  color: (racha.cantidad == 0 || racha.enRiesgo) ? Colors.grey : Colors.purple,
+                  label: 'Días en racha',
+                  value: val,
+                  gradientColors: const [Color(0xFFFF4500), Color(0xFFFF8C00)],
+                  isInactiveOrRisk: isZeroOrRisk,
                 );
               },
             ),
@@ -51,35 +47,32 @@ class RachaIndicator extends ConsumerWidget {
 
           const SizedBox(width: 12),
 
-          // === RACHA DIARIA ===
+          // === RACHA SEMANAL ===
           Expanded(
-            child: dailyRachaAsync.when(
-              loading: () => _buildRachaSquare(
-                emoji: '🔥',
-                label: 'Días',
+            child: weeklyRachaAsync.when(
+              loading: () => _buildRachaCard(
+                emoji: '⚡',
+                label: 'Semanas',
                 value: '–',
-                color: Colors.red,
+                gradientColors: const [Color(0xFF8E24AA), Color(0xFFD81B60)],
+                isInactiveOrRisk: false,
               ),
-              error: (_, __) => _buildRachaSquare(
-                emoji: '🔥',
-                label: 'Días',
+              error: (_, __) => _buildRachaCard(
+                emoji: '⚡',
+                label: 'Semanas',
                 value: '0',
-                color: Colors.red,
+                gradientColors: const [Color(0xFF8E24AA), Color(0xFFD81B60)],
+                isInactiveOrRisk: true,
               ),
               data: (racha) {
-                if (racha == null) {
-                  return _buildRachaSquare(
-                    emoji: '🔥',
-                    label: 'Días',
-                    value: '0',
-                    color: Colors.red,
-                  );
-                }
-                return _buildRachaSquare(
-                  emoji: '🔥',
-                  label: 'Días',
-                  value: '${racha.cantidad}',
-                  color: (racha.cantidad == 0 || racha.enRiesgo) ? Colors.grey : Colors.red,
+                final isZeroOrRisk = racha == null || racha.cantidad == 0 || racha.enRiesgo;
+                final val = racha == null ? '0' : '${racha.cantidad}';
+                return _buildRachaCard(
+                  emoji: '⚡',
+                  label: 'Semanas seguidas',
+                  value: val,
+                  gradientColors: const [Color(0xFF9C27B0), Color(0xFFE91E63)],
+                  isInactiveOrRisk: isZeroOrRisk,
                 );
               },
             ),
@@ -89,43 +82,93 @@ class RachaIndicator extends ConsumerWidget {
     );
   }
 
-  /// Construye un cuadrado de racha con emoji, etiqueta y número - COMPLETAMENTE RELLENO DE COLOR
-  Widget _buildRachaSquare({
+  /// Construye una tarjeta horizontal elegante y bien proporcionada para la racha
+  Widget _buildRachaCard({
     required String emoji,
     required String label,
     required String value,
-    required Color color,
+    required List<Color> gradientColors,
+    required bool isInactiveOrRisk,
   }) {
+    final activeGradient = LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: gradientColors,
+    );
+
+    final inactiveBg = Colors.black.withValues(alpha: 0.25);
+
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.85), // Relleno completo del color
-        borderRadius: BorderRadius.circular(12),
+        color: isInactiveOrRisk ? inactiveBg : null,
+        gradient: isInactiveOrRisk ? null : activeGradient,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isInactiveOrRisk
+              ? Colors.white.withValues(alpha: 0.15)
+              : Colors.white.withValues(alpha: 0.3),
+          width: 1.2,
+        ),
+        boxShadow: [
+          if (!isInactiveOrRisk)
+            BoxShadow(
+              color: gradientColors.first.withValues(alpha: 0.35),
+              blurRadius: 10,
+              spreadRadius: 1,
+              offset: const Offset(0, 4),
+            ),
+        ],
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
+      child: Row(
         children: [
-          Text(
-            emoji,
-            style: const TextStyle(fontSize: 20),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+          // Icono grande en contenedor redondeado
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: isInactiveOrRisk ? 0.08 : 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                emoji,
+                style: const TextStyle(fontSize: 22),
+              ),
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              color: Colors.white.withValues(alpha: 0.9),
-              fontWeight: FontWeight.w500,
+          const SizedBox(width: 12),
+          // Valor grande y Etiqueta descriptiva
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w900,
+                    color: isInactiveOrRisk ? Colors.white70 : Colors.white,
+                    height: 1.1,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                    color: isInactiveOrRisk
+                        ? Colors.white.withValues(alpha: 0.5)
+                        : Colors.white.withValues(alpha: 0.9),
+                    letterSpacing: 0.2,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
           ),
         ],
