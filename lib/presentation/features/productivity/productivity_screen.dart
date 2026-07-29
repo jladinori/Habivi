@@ -10,6 +10,7 @@ import 'package:habivi/domain/services/puntos_estudio_service.dart';
 import 'package:habivi/core/utils/app_clock.dart';
 import 'package:habivi/presentation/providers/dev_mode_provider.dart';
 import 'package:habivi/presentation/shared/widgets/premium_fab.dart';
+import 'package:habivi/presentation/features/productivity/focus_timer_dialog.dart';
 
 const Map<String, IconData> _iconosMetodo = {
   'timer': Icons.timer_outlined,
@@ -1239,12 +1240,26 @@ class _ProductivityScreenState extends ConsumerState<ProductivityScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            const SizedBox(height: 16),
-            Text(
-              'Productividad',
-              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Productividad',
+                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                IconButton.filledTonal(
+                  onPressed: () {
+                    FocusTimerDialog.show(
+                      context,
+                      onSessionSaved: _cargarDatos,
+                    );
+                  },
+                  icon: const Icon(Icons.timer_rounded, size: 24),
+                  tooltip: 'Temporizador de Enfoque',
+                ),
+              ],
             ),
             const SizedBox(height: 20),
 
