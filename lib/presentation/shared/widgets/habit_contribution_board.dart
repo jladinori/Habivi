@@ -4,11 +4,13 @@ import 'package:habivi/core/utils/app_clock.dart';
 class HabitContributionBoard extends StatefulWidget {
   final List<String> fechasCompletadas;
   final Color baseColor;
+  final String? restDay;
 
   const HabitContributionBoard({
     super.key,
     required this.fechasCompletadas,
     required this.baseColor,
+    this.restDay,
   });
 
   @override
@@ -71,20 +73,29 @@ class _HabitContributionBoardState extends State<HabitContributionBoard> {
                     final fechaStr =
                         '${dia.year}-${dia.month.toString().padLeft(2, '0')}-${dia.day.toString().padLeft(2, '0')}';
                     final completado = widget.fechasCompletadas.contains(fechaStr);
+                    final esRestDay = widget.restDay != null && widget.restDay == fechaStr;
                     final esHoy = dia.year == hoy.year &&
                         dia.month == hoy.month &&
                         dia.day == hoy.day;
-
+                    final restColor = const Color(0xFF80D8FF);
+                    final backgroundColor = esRestDay
+                        ? restColor
+                        : (completado
+                            ? widget.baseColor
+                            : widget.baseColor.withValues(alpha: 0.12));
+ 
                     return Container(
                       width: 8,
                       height: 8,
                       margin: const EdgeInsets.symmetric(vertical: 1.5),
                       decoration: BoxDecoration(
-                        color: completado ? widget.baseColor : widget.baseColor.withValues(alpha: 0.12),
+                        color: backgroundColor,
                         borderRadius: BorderRadius.circular(2.0),
                         border: esHoy
                             ? Border.all(
-                                color: Colors.white.withValues(alpha: 0.8),
+                                color: esRestDay
+                                    ? restColor.withValues(alpha: 0.95)
+                                    : Colors.white.withValues(alpha: 0.8),
                                 width: 1.0,
                               )
                             : null,

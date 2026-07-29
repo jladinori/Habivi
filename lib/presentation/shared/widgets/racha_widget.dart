@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:habivi/data/models/racha.dart';
 import 'package:habivi/presentation/providers/racha_provider.dart';
 
 class RachaIndicator extends ConsumerWidget {
@@ -34,12 +35,15 @@ class RachaIndicator extends ConsumerWidget {
               data: (racha) {
                 final isZeroOrRisk = racha == null || racha.cantidad == 0 || racha.enRiesgo;
                 final val = racha == null ? '0' : '${racha.cantidad}';
+                final todayRestDay = racha?.fechaInicioPeriodoRecuperacion == Racha.getTodayFormatted();
                 return _buildRachaCard(
                   emoji: '🔥',
                   label: 'Días en racha',
                   value: val,
-                  gradientColors: const [Color(0xFFFF4500), Color(0xFFFF8C00)],
-                  isInactiveOrRisk: isZeroOrRisk,
+                  gradientColors: todayRestDay
+                      ? const [Color(0xFF64B5F6), Color(0xFF81D4FA)]
+                      : const [Color(0xFFFF4500), Color(0xFFFF8C00)],
+                  isInactiveOrRisk: isZeroOrRisk && !todayRestDay,
                 );
               },
             ),

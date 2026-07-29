@@ -7,6 +7,7 @@ import 'package:habivi/data/repositories/racha_repository.dart';
 import 'package:habivi/presentation/shared/widgets/habit_contribution_board.dart';
 import 'package:habivi/core/utils/app_clock.dart';
 import 'package:habivi/domain/services/racha_service.dart';
+import 'package:habivi/presentation/providers/racha_provider.dart';
 import 'package:habivi/presentation/providers/dev_mode_provider.dart';
 import 'package:habivi/presentation/shared/widgets/suggestions_bottom_sheet.dart';
 import 'package:habivi/presentation/shared/widgets/premium_fab.dart';
@@ -61,6 +62,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
   late HabitRepository _repository;
   late RachaRepository _rachaRepository;
   List<MapEntry<dynamic, Habito>> _habitos = [];
+  String? _restDayFecha;
 
   // Colores personalizados de secciones (almacenados en Hive)
   final Map<String, Color> _sectionColors = {
@@ -139,11 +141,17 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
     return _habitColors[habito.idHabito % _habitColors.length];
   }
 
+  bool _esHabitoDiario(Habito habito) => habito.safeVecesPorSemana == 7;
+
   Future<void> _loadHabitos() async {
     try {
       final habitosMap = await _repository.readAll();
+      final dailyRacha = await _rachaRepository.readDailyRacha();
       setState(() {
         _habitos = habitosMap.entries.toList();
+        _restDayFecha = dailyRacha?.fechaInicioPeriodoRecuperacion.isNotEmpty == true
+            ? dailyRacha!.fechaInicioPeriodoRecuperacion
+            : null;
       });
       await _verificarResetearPorDia();
       await _cargarColoresGuardados();
@@ -791,8 +799,24 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
       }
 
       final hoy = _obtenerFechaHoy();
+      for (final entry in _habitos) {
+        final habito = entry.value;
+        if (!_esHabitoDiario(habito)) continue;
+
+        final fechas = List<String>.from(habito.safeFechasCompletadas);
+        if (!fechas.contains(hoy)) {
+          fechas.add(hoy);
+          habito.fechasCompletadas = fechas;
+          habito.completadoHoy = true;
+          habito.fechaUltimoCompletado = hoy;
+          await _repository.update(entry.key, habito);
+        }
+      }
+
       final updated = dailyRacha.copyWith(fechaInicioPeriodoRecuperacion: hoy);
       await _rachaRepository.update(updated);
+      _restDayFecha = hoy;
+      final _ = ref.refresh(dailyRachaProvider);
       await _loadHabitos();
 
       if (mounted) {
@@ -1147,6 +1171,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                 HabitContributionBoard(
                   fechasCompletadas: habito.safeFechasCompletadas,
                   baseColor: color,
+                  restDay: _esHabitoDiario(habito) ? _restDayFecha : null,
                 ),
               ],
             ),
