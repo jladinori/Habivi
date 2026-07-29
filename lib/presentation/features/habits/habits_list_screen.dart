@@ -7,6 +7,7 @@ import 'package:habivi/presentation/shared/widgets/habit_contribution_board.dart
 import 'package:habivi/core/utils/app_clock.dart';
 import 'package:habivi/presentation/providers/dev_mode_provider.dart';
 import 'package:habivi/presentation/shared/widgets/suggestions_bottom_sheet.dart';
+import 'package:habivi/presentation/shared/widgets/premium_fab.dart';
 
 const List<Color> _habitColors = [
   Color(0xFFEC407A), // Pink
@@ -38,6 +39,12 @@ const Map<String, IconData> _disponiblesIconos = {
   'sleep': Icons.bedtime,
   'nature': Icons.nature_people,
   'star': Icons.star,
+};
+
+const Map<String, List<String>> _iconosPorAspecto = {
+  'físico': ['run', 'gym', 'bike', 'water', 'heart'],
+  'mental': ['book', 'code', 'brain', 'brush', 'lightbulb'],
+  'espiritual': ['spa', 'meditation', 'sleep', 'nature', 'star'],
 };
 
 
@@ -382,6 +389,119 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                     }
                   },
                   child: const Text('Guardar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// Selector de ícono y color al presionar el ícono del hábito
+  void _mostrarSelectorIconoYColor(dynamic habitKey, Habito habito) {
+    Color selectedColor = _obtenerColorHabito(habito);
+    final aspectoNorm = _normalizarAspecto(habito.aspecto);
+    final listIconos =
+        _iconosPorAspecto[aspectoNorm] ?? _iconosPorAspecto['físico']!;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              title: Text('Personalizar "${habito.nombreHabito}"'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Color del hábito:',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _habitColors.map((color) {
+                        final isSelected = selectedColor.toARGB32() == color.toARGB32();
+                        return InkWell(
+                          onTap: () async {
+                            await _guardarColorHabito(habito.idHabito, color);
+                            setStateDialog(() {
+                              selectedColor = color;
+                            });
+                          },
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: color,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: isSelected ? Colors.white : Colors.transparent,
+                                width: 2,
+                              ),
+                            ),
+                            child: isSelected
+                                ? const Icon(Icons.check, color: Colors.white, size: 18)
+                                : null,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('Ícono:',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.maxFinite,
+                      child: GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 5,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                        ),
+                        itemCount: listIconos.length,
+                        itemBuilder: (context, i) {
+                          final key = listIconos[i];
+                          final icon = _disponiblesIconos[key]!;
+                          final esSeleccionado = habito.iconoKey == key;
+
+                          return InkWell(
+                            onTap: () async {
+                              final dialogContext = context;
+                              habito.iconoKey = key;
+                              await _repository.update(habitKey, habito);
+                              await _loadHabitos();
+                              if (dialogContext.mounted) {
+                                Navigator.of(dialogContext).pop();
+                              }
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.05),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: esSeleccionado ? selectedColor : Colors.transparent,
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Icon(icon, color: Theme.of(context).colorScheme.onSurface),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Listo'),
                 ),
               ],
             );
@@ -852,18 +972,21 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
               children: [
                 Row(
                   children: [
-                    // Icono del hábito
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        icon,
-                        color: color,
-                        size: 24,
+                    // Icono del hábito (Tocar para personalizar icono y color)
+                    GestureDetector(
+                      onTap: () => _mostrarSelectorIconoYColor(entry.key, habito),
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          icon,
+                          color: color,
+                          size: 24,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -1069,9 +1192,8 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: PremiumFAB(
         onPressed: _mostrarDialogoAgregarHabito,
-        child: const Icon(Icons.add),
       ),
     );
   }

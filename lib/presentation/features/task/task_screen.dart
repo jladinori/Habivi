@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:habivi/data/models/tarea.dart';
 import 'package:habivi/data/repositories/task_repository.dart';
+import 'package:habivi/presentation/shared/widgets/premium_fab.dart';
 
 // Colores para las tarjetas de pendientes (rotación cíclica)
 const List<Color> _taskColors = [
@@ -549,7 +550,7 @@ class _TaskScreenState extends State<TaskScreen> with TickerProviderStateMixin {
         );
       },
       child: Card(
-        color: cs.surfaceVariant,
+        color: cs.surfaceContainerHighest,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
@@ -851,9 +852,8 @@ class _TaskScreenState extends State<TaskScreen> with TickerProviderStateMixin {
               ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: PremiumFAB(
         onPressed: _mostrarDialogoAgregar,
-        child: const Icon(Icons.add),
       ),
     );
   }

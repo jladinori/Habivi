@@ -9,6 +9,7 @@ import 'package:habivi/data/models/sesion_estudio.dart';
 import 'package:habivi/domain/services/puntos_estudio_service.dart';
 import 'package:habivi/core/utils/app_clock.dart';
 import 'package:habivi/presentation/providers/dev_mode_provider.dart';
+import 'package:habivi/presentation/shared/widgets/premium_fab.dart';
 
 const Map<String, IconData> _iconosMetodo = {
   'timer': Icons.timer_outlined,
@@ -1391,9 +1392,9 @@ class _ProductivityScreenState extends ConsumerState<ProductivityScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: PremiumFAB(
         onPressed: _mostrarMetodos,
-        child: const Icon(Icons.add),
       ),
     );
   }
