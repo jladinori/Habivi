@@ -643,6 +643,26 @@ class _ProductivityScreenState extends ConsumerState<ProductivityScreen> {
         'q': '¿Qué hago si mi racha se rompe?',
         'a': 'Analiza por qué pasó, usa el día de descanso si hace falta, y planifica un retorno gradual en vez de exigirte perfección inmediata.'
       },
+      {
+        'q': '¿Cómo dividir el tiempo cuando tengo varias materias?',
+        'a': 'Prioriza por urgencia y dificultad. Usa bloques de tiempo para cada materia y alterna para evitar fatiga mental.'
+      },
+      {
+        'q': '¿Cuál es la duración ideal de una sesión?',
+        'a': 'Depende de ti: 25-50 minutos es un buen rango. Si te cuesta empezar, prueba con 15-20 minutos e incrementa gradualmente.'
+      },
+      {
+        'q': '¿Cómo revisar lo aprendido para retener más?',
+        'a': 'Usa técnicas como active recall y spaced repetition. Haz resúmenes y prueba explicarlo en voz alta (Feynman).' 
+      },
+      {
+        'q': '¿Qué hacer si me siento abrumado por la cantidad de tareas?',
+        'a': 'Haz una lista priorizada, elimina o delega lo no esencial y enfócate en tareas pequeñas y manejables.'
+      },
+      {
+        'q': '¿Cómo recuperar la motivación después de una mala racha?',
+        'a': 'Celebra pequeñas victorias, ajusta metas más realistas y usa descansos programados para evitar burnout.'
+      },
     ];
 
     final rand = math.Random();
@@ -655,53 +675,113 @@ class _ProductivityScreenState extends ConsumerState<ProductivityScreen> {
       builder: (ctx) => StatefulBuilder(
         builder: (context, setStateDialog) {
           final current = faqs[order[idx]];
+          final cs = Theme.of(context).colorScheme;
 
-          return AlertDialog(
-            title: const Text('Preguntas frecuentes'),
-            content: SizedBox(
-              width: 360,
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(current['q'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 12),
-                    if (showAnswer)
-                      Text(current['a'] ?? ''),
-                    if (!showAnswer)
-                      Text('Pulsa "Ver respuesta" para ver la solución', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-                  ],
-                ),
+          return Dialog(
+            insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Header with gradient
+                  Container(
+                    height: 110,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [cs.primary, cs.primaryContainer],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                    ),
+                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: Colors.white.withOpacity(0.12),
+                          child: Icon(Icons.help_outline, color: Colors.white, size: 28),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Preguntas frecuentes',
+                                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      )),
+                              const SizedBox(height: 6),
+                              Text('Consejos rápidos para mejorar tu productividad',
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                        color: Colors.white70,
+                                      )),
+                            ],
+                          ),
+                        ),
+                        Text('${idx + 1}/${faqs.length}', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ),
+
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(current['q'] ?? '',
+                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: cs.onSurface)),
+                        const SizedBox(height: 12),
+                        AnimatedCrossFade(
+                          firstChild: Text('Pulsa "Ver respuesta" para ver la solución', style: TextStyle(color: cs.onSurfaceVariant, fontSize: 14)),
+                          secondChild: Text(current['a'] ?? '', style: TextStyle(fontSize: 16, color: cs.onSurface)),
+                          crossFadeState: showAnswer ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                          duration: const Duration(milliseconds: 220),
+                        ),
+                        const SizedBox(height: 18),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () => Navigator.pop(ctx),
+                                child: const Text('Cerrar'),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            TextButton(
+                              onPressed: () {
+                                setStateDialog(() {
+                                  showAnswer = true;
+                                });
+                              },
+                              child: const Text('Ver respuesta'),
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton(
+                              onPressed: () {
+                                setStateDialog(() {
+                                  idx++;
+                                  if (idx >= order.length) {
+                                    order.shuffle(rand);
+                                    idx = 0;
+                                  }
+                                  showAnswer = false;
+                                });
+                              },
+                              child: const Text('Siguiente'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Cerrar'),
-              ),
-              TextButton(
-                onPressed: () {
-                  setStateDialog(() {
-                    showAnswer = true;
-                  });
-                },
-                child: const Text('Ver respuesta'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  setStateDialog(() {
-                    idx++;
-                    if (idx >= order.length) {
-                      order.shuffle(rand);
-                      idx = 0;
-                    }
-                    showAnswer = false;
-                  });
-                },
-                child: const Text('Siguiente pregunta'),
-              ),
-            ],
           );
         },
       ),
