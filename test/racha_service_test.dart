@@ -45,4 +45,23 @@ void main() {
     final streak = RachaService.calcularRachaSemanal(habits);
     expect(streak, 1);
   });
+
+  test('daily streak preserves with rest day even when daily habits are skipped', () {
+    final habits = [
+      Habito(1, 'H1', 'desc', 'físico|run', fechasCompletadas: ['2026-07-27'], vecesPorSemana: 7),
+      Habito(2, 'H2', 'desc', 'mental|book', fechasCompletadas: ['2026-07-27'], vecesPorSemana: 7),
+    ];
+
+    final streak = RachaService.calcularRachaDiaria(
+      habits,
+      restDay: '2026-07-28',
+    );
+
+    expect(streak, 2);
+  });
+
+  test('rest day can only be used once per week', () {
+    expect(RachaService.puedeUsarDiaDescanso('2026-07-28'), isFalse);
+    expect(RachaService.puedeUsarDiaDescanso('2026-07-21'), isTrue);
+  });
 }

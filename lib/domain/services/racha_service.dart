@@ -35,7 +35,7 @@ class RachaService {
   static DateTime _dateOnly(DateTime date) =>
       DateTime(date.year, date.month, date.day);
 
-  static int calcularRachaDiaria(List<Habito> habits) {
+  static int calcularRachaDiaria(List<Habito> habits, {String? restDay}) {
     final dailyHabits = habits
         .where((h) => h.safeVecesPorSemana == 7)
         .toList();
@@ -50,13 +50,30 @@ class RachaService {
         .expand((h) => h.safeFechasCompletadas)
         .toSet()
         .map(_parseDate)
-        .toList();
+        .toSet();
+
+    if (restDay != null && restDay.isNotEmpty) {
+      try {
+        allPotentialDates.add(_parseDate(restDay));
+      } catch (_) {}
+    }
+
     if (allPotentialDates.isEmpty) return 0;
 
     final successDates = allPotentialDates
         .where((d) => allCompletedOn(d))
         .toSet()
         .toList();
+
+    if (restDay != null && restDay.isNotEmpty) {
+      try {
+        final restDate = _parseDate(restDay);
+        if (!successDates.any((d) => _isSameDay(d, restDate))) {
+          successDates.add(restDate);
+        }
+      } catch (_) {}
+    }
+
     if (successDates.isEmpty) return 0;
     successDates.sort((a, b) => b.compareTo(a));
 
@@ -167,38 +184,55 @@ class RachaService {
     /// SOLO cuentan hábitos EXCLUSIVAMENTE diarios (vecesPorSemana == 7)
   static bool completadoHoy(List<Habito> habits) {
     final dailyHabits = habits
-    .where((h) => h.safeVecesPorSemana == 7)
+        .where((h) => h.safeVecesPorSemana == 7)
         .toList();
     if (dailyHabits.isEmpty) return false;
- 
+  
     final hoy = _fmt(AppClock.now());
     return dailyHabits.every((h) => h.safeFechasCompletadas.contains(hoy));
   }
- 
-  static bool rachaDiariaSigueActiva(List<Habito> habits) {
+  
+  static bool puedeUsarDiaDescanso(String restDay) {
+    if (restDay.isEmpty) return true;
+    try {
+      final usedDate = _parseDate(restDay);
+      return _weekKey(usedDate) != _weekKey(AppClock.now());
+    } catch (_) {
+      return true;
+    }
+  }
+  
+  static bool rachaDiariaSigueActiva(List<Habito> habits, {String? restDay}) {
     final dailyHabits = habits
         .where((h) => h.safeVecesPorSemana == 7)
         .toList();
     if (dailyHabits.isEmpty) return false;
- 
+  
     bool allCompletedOn(DateTime day) {
       final formatted = _fmt(day);
       return dailyHabits.every((h) => h.safeFechasCompletadas.contains(formatted));
     }
- 
+  
     final successDates = dailyHabits
         .expand((h) => h.safeFechasCompletadas)
         .toSet()
         .map(_parseDate)
         .where(allCompletedOn)
-        .toList();
+        .toSet();
+
+    if (restDay != null && restDay.isNotEmpty) {
+      try {
+        successDates.add(_parseDate(restDay));
+      } catch (_) {}
+    }
+
     if (successDates.isEmpty) return false;
-    successDates.sort((a, b) => b.compareTo(a));
- 
+    final sortedDates = successDates.toList()..sort((a, b) => b.compareTo(a));
+  
     final hoy = _dateOnly(AppClock.now());
-    final lastSuccess = _dateOnly(successDates.first);
+    final lastSuccess = _dateOnly(sortedDates.first);
     final daysSinceLast = hoy.difference(lastSuccess).inDays;
- 
+  
     return daysSinceLast <= 1;
   }
 

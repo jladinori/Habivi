@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
 import 'package:habivi/data/models/habito.dart';
 import 'package:habivi/data/repositories/habit_repository.dart';
+import 'package:habivi/data/repositories/racha_repository.dart';
 import 'package:habivi/presentation/shared/widgets/habit_contribution_board.dart';
 import 'package:habivi/core/utils/app_clock.dart';
+import 'package:habivi/domain/services/racha_service.dart';
 import 'package:habivi/presentation/providers/dev_mode_provider.dart';
 import 'package:habivi/presentation/shared/widgets/suggestions_bottom_sheet.dart';
 import 'package:habivi/presentation/shared/widgets/premium_fab.dart';
@@ -57,6 +59,7 @@ class HabitsListScreen extends ConsumerStatefulWidget {
 
 class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
   late HabitRepository _repository;
+  late RachaRepository _rachaRepository;
   List<MapEntry<dynamic, Habito>> _habitos = [];
 
   // Colores personalizados de secciones (almacenados en Hive)
@@ -73,6 +76,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
   void initState() {
     super.initState();
     _repository = HabitRepository();
+    _rachaRepository = RachaRepository();
     _loadHabitos();
     _cargarColoresGuardados();
   }
@@ -745,17 +749,64 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
           title: const Text('Día de descanso'),
           content: const Text(
             'Este día de descanso te permite tomar una pausa sin que tu racha diaria se rompa. '
-            'Usa esta ayuda cuando necesites descansar y quieras mantener tu progreso.',
+            'Solo se puede usar una vez por semana y se recarga la siguiente semana.',
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Entendido'),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await _usarDiaDescanso();
+              },
+              child: const Text('Usar descanso'),
             ),
           ],
         );
       },
     );
+  }
+
+  Future<void> _usarDiaDescanso() async {
+    try {
+      final dailyRacha = await _rachaRepository.readDailyRacha();
+      if (dailyRacha == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No se encontró la racha diaria.')),
+          );
+        }
+        return;
+      }
+
+      if (!RachaService.puedeUsarDiaDescanso(dailyRacha.fechaInicioPeriodoRecuperacion)) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Ya usaste el día de descanso esta semana.')),
+          );
+        }
+        return;
+      }
+
+      final hoy = _obtenerFechaHoy();
+      final updated = dailyRacha.copyWith(fechaInicioPeriodoRecuperacion: hoy);
+      await _rachaRepository.update(updated);
+      await _loadHabitos();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Día de descanso activado sin romper la racha.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al activar día de descanso: $e')),
+        );
+      }
+    }
   }
 
   /// Encabezado de sección con soporte de cambio de color al presionar (onTap)

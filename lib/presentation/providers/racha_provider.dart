@@ -43,8 +43,14 @@ final dailyRachaProvider = FutureProvider<Racha?>((ref) async {
   if (current == null) return null;
 
   final habits = (await habitRepo.readAll()).values.toList();
-  final streak = RachaService.calcularRachaDiaria(habits);
-  final activoHoy = RachaService.rachaDiariaSigueActiva(habits);
+  final streak = RachaService.calcularRachaDiaria(
+    habits,
+    restDay: current.fechaInicioPeriodoRecuperacion,
+  );
+  final activoHoy = RachaService.rachaDiariaSigueActiva(
+    habits,
+    restDay: current.fechaInicioPeriodoRecuperacion,
+  );
   final updated = current.copyWith(cantidad: streak, enRiesgo: !activoHoy);
   await repo.update(updated);
   return updated;
