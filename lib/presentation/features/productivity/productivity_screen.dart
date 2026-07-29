@@ -621,6 +621,93 @@ class _ProductivityScreenState extends ConsumerState<ProductivityScreen> {
     );
   }
 
+  void _showFAQDialog() {
+    final faqs = <Map<String, String>>[
+      {
+        'q': '¿Qué hago si no puedo concentrarme?',
+        'a': 'Prueba sesiones más cortas (p. ej. 25 minutos), elimina distracciones y usa la técnica Pomodoro. Respira y empieza con 5 minutos si hace falta.'
+      },
+      {
+        'q': '¿Cómo evitar la procrastinación?',
+        'a': 'Divide la tarea en pasos pequeños, establece una regla de 2 minutos para empezar y usa recompensas pequeñas al completar bloques de tiempo.'
+      },
+      {
+        'q': '¿Qué hacer cuando me siento cansado?',
+        'a': 'Haz una pausa breve, hidrátate y realiza estiramientos. Si estás agotado, respeta el descanso y programa una sesión más tarde.'
+      },
+      {
+        'q': '¿Cómo establecer metas de estudio realistas?',
+        'a': 'Establece metas pequeñas y específicas (minutos por día), revisa semanalmente y ajusta según tu disponibilidad.'
+      },
+      {
+        'q': '¿Qué hago si mi racha se rompe?',
+        'a': 'Analiza por qué pasó, usa el día de descanso si hace falta, y planifica un retorno gradual en vez de exigirte perfección inmediata.'
+      },
+    ];
+
+    final rand = math.Random();
+    List<int> order = List<int>.generate(faqs.length, (i) => i)..shuffle(rand);
+    int idx = 0;
+    bool showAnswer = false;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setStateDialog) {
+          final current = faqs[order[idx]];
+
+          return AlertDialog(
+            title: const Text('Preguntas frecuentes'),
+            content: SizedBox(
+              width: 360,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(current['q'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 12),
+                    if (showAnswer)
+                      Text(current['a'] ?? ''),
+                    if (!showAnswer)
+                      Text('Pulsa "Ver respuesta" para ver la solución', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cerrar'),
+              ),
+              TextButton(
+                onPressed: () {
+                  setStateDialog(() {
+                    showAnswer = true;
+                  });
+                },
+                child: const Text('Ver respuesta'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  setStateDialog(() {
+                    idx++;
+                    if (idx >= order.length) {
+                      order.shuffle(rand);
+                      idx = 0;
+                    }
+                    showAnswer = false;
+                  });
+                },
+                child: const Text('Siguiente pregunta'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
   List<_MetodoStats> _obtenerEstadisticasMetodos() {
     final Map<String, int> mapaMinutos = {};
     int sumaTotal = 0;
@@ -1249,15 +1336,25 @@ class _ProductivityScreenState extends ConsumerState<ProductivityScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                 ),
-                IconButton.filledTonal(
-                  onPressed: () {
-                    FocusTimerDialog.show(
-                      context,
-                      onSessionSaved: _cargarDatos,
-                    );
-                  },
-                  icon: const Icon(Icons.timer_rounded, size: 24),
-                  tooltip: 'Temporizador de Enfoque',
+                Row(
+                  children: [
+                    IconButton.filledTonal(
+                      onPressed: () {
+                        FocusTimerDialog.show(
+                          context,
+                          onSessionSaved: _cargarDatos,
+                        );
+                      },
+                      icon: const Icon(Icons.timer_rounded, size: 24),
+                      tooltip: 'Temporizador de Enfoque',
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton.filledTonal(
+                      onPressed: _showFAQDialog,
+                      icon: const Icon(Icons.help_outline, size: 24),
+                      tooltip: 'Preguntas frecuentes',
+                    ),
+                  ],
                 ),
               ],
             ),
