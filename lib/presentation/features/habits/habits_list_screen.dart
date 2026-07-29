@@ -737,6 +737,27 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
     });
   }
 
+  void _mostrarDialogoDiaDescanso() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Día de descanso'),
+          content: const Text(
+            'Este día de descanso te permite tomar una pausa sin que tu racha diaria se rompa. '
+            'Usa esta ayuda cuando necesites descansar y quieras mantener tu progreso.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Entendido'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   /// Encabezado de sección con soporte de cambio de color al presionar (onTap)
   Widget _buildSectionHeader(
     BuildContext context, {
@@ -1110,12 +1131,22 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                'Hábitos',
-                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Hábitos',
+                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.bedtime_outlined),
+                    tooltip: 'Día de descanso',
+                    onPressed: _mostrarDialogoDiaDescanso,
+                  ),
+                ],
               ),
             ),
             Expanded(
