@@ -24,6 +24,12 @@ class Racha {
   @HiveField(6)
   String? fechaCreacion;
 
+  @HiveField(7)
+  int contadorDescansos;
+
+  @HiveField(8)
+  List<String> fechasDescanso;
+
   Racha({
     required this.idRacha,
     required this.tipo,
@@ -32,6 +38,8 @@ class Racha {
     this.enRiesgo = false,
     this.fechaInicioPeriodoRecuperacion = '',
     this.fechaCreacion,
+    this.contadorDescansos = 0,
+    this.fechasDescanso = const [],
   });
 
   Racha copyWith({
@@ -42,6 +50,8 @@ class Racha {
     bool? enRiesgo,
     String? fechaInicioPeriodoRecuperacion,
     String? fechaCreacion,
+    int? contadorDescansos,
+    List<String>? fechasDescanso,
   }) {
     return Racha(
       idRacha: idRacha ?? this.idRacha,
@@ -52,6 +62,8 @@ class Racha {
       fechaInicioPeriodoRecuperacion:
           fechaInicioPeriodoRecuperacion ?? this.fechaInicioPeriodoRecuperacion,
       fechaCreacion: fechaCreacion ?? this.fechaCreacion,
+      contadorDescansos: contadorDescansos ?? this.contadorDescansos,
+      fechasDescanso: fechasDescanso ?? this.fechasDescanso,
     );
   }
 
@@ -130,13 +142,15 @@ class RachaAdapter extends TypeAdapter<Racha> {
       enRiesgo: fields[4] as bool? ?? false,
       fechaInicioPeriodoRecuperacion: fields[5] as String? ?? '',
       fechaCreacion: fields[6] as String?,
+      contadorDescansos: fields[7] as int? ?? 0,
+      fechasDescanso: (fields[8] as List?)?.cast<String>() ?? const [],
     );
   }
 
   @override
   void write(BinaryWriter writer, Racha obj) {
     writer
-      ..writeByte(7)
+      ..writeByte(9)
       ..writeByte(0)
       ..write(obj.idRacha)
       ..writeByte(1)
@@ -150,7 +164,11 @@ class RachaAdapter extends TypeAdapter<Racha> {
       ..writeByte(5)
       ..write(obj.fechaInicioPeriodoRecuperacion)
       ..writeByte(6)
-      ..write(obj.fechaCreacion);
+      ..write(obj.fechaCreacion)
+      ..writeByte(7)
+      ..write(obj.contadorDescansos)
+      ..writeByte(8)
+      ..write(obj.fechasDescanso);
   }
 
   @override

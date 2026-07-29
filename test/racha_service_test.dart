@@ -54,7 +54,7 @@ void main() {
 
     final streak = RachaService.calcularRachaDiaria(
       habits,
-      restDay: '2026-07-28',
+      restDays: ['2026-07-28'],
     );
 
     expect(streak, 2);

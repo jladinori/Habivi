@@ -35,7 +35,7 @@ class RachaService {
   static DateTime _dateOnly(DateTime date) =>
       DateTime(date.year, date.month, date.day);
 
-  static int calcularRachaDiaria(List<Habito> habits, {String? restDay}) {
+  static int calcularRachaDiaria(List<Habito> habits, {List<String>? restDays}) {
     final dailyHabits = habits
         .where((h) => h.safeVecesPorSemana == 7)
         .toList();
@@ -52,10 +52,12 @@ class RachaService {
         .map(_parseDate)
         .toSet();
 
-    if (restDay != null && restDay.isNotEmpty) {
-      try {
-        allPotentialDates.add(_parseDate(restDay));
-      } catch (_) {}
+    if (restDays != null && restDays.isNotEmpty) {
+      for (final rd in restDays) {
+        try {
+          allPotentialDates.add(_parseDate(rd));
+        } catch (_) {}
+      }
     }
 
     if (allPotentialDates.isEmpty) return 0;
@@ -65,13 +67,15 @@ class RachaService {
         .toSet()
         .toList();
 
-    if (restDay != null && restDay.isNotEmpty) {
-      try {
-        final restDate = _parseDate(restDay);
-        if (!successDates.any((d) => _isSameDay(d, restDate))) {
-          successDates.add(restDate);
-        }
-      } catch (_) {}
+    if (restDays != null && restDays.isNotEmpty) {
+      for (final rd in restDays) {
+        try {
+          final restDate = _parseDate(rd);
+          if (!successDates.any((d) => _isSameDay(d, restDate))) {
+            successDates.add(restDate);
+          }
+        } catch (_) {}
+      }
     }
 
     if (successDates.isEmpty) return 0;
@@ -202,7 +206,7 @@ class RachaService {
     }
   }
   
-  static bool rachaDiariaSigueActiva(List<Habito> habits, {String? restDay}) {
+  static bool rachaDiariaSigueActiva(List<Habito> habits, {List<String>? restDays}) {
     final dailyHabits = habits
         .where((h) => h.safeVecesPorSemana == 7)
         .toList();
@@ -220,10 +224,12 @@ class RachaService {
         .where(allCompletedOn)
         .toSet();
 
-    if (restDay != null && restDay.isNotEmpty) {
-      try {
-        successDates.add(_parseDate(restDay));
-      } catch (_) {}
+    if (restDays != null && restDays.isNotEmpty) {
+      for (final rd in restDays) {
+        try {
+          successDates.add(_parseDate(rd));
+        } catch (_) {}
+      }
     }
 
     if (successDates.isEmpty) return false;

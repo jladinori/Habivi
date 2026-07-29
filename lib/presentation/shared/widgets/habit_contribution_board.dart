@@ -4,13 +4,13 @@ import 'package:habivi/core/utils/app_clock.dart';
 class HabitContributionBoard extends StatefulWidget {
   final List<String> fechasCompletadas;
   final Color baseColor;
-  final String? restDay;
+  final List<String>? restDays;
 
   const HabitContributionBoard({
     super.key,
     required this.fechasCompletadas,
     required this.baseColor,
-    this.restDay,
+    this.restDays,
   });
 
   @override
@@ -73,7 +73,7 @@ class _HabitContributionBoardState extends State<HabitContributionBoard> {
                     final fechaStr =
                         '${dia.year}-${dia.month.toString().padLeft(2, '0')}-${dia.day.toString().padLeft(2, '0')}';
                     final completado = widget.fechasCompletadas.contains(fechaStr);
-                    final esRestDay = widget.restDay != null && widget.restDay == fechaStr;
+                    final esRestDay = widget.restDays != null && widget.restDays!.contains(fechaStr);
                     final esHoy = dia.year == hoy.year &&
                         dia.month == hoy.month &&
                         dia.day == hoy.day;

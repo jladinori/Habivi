@@ -62,7 +62,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
   late HabitRepository _repository;
   late RachaRepository _rachaRepository;
   List<MapEntry<dynamic, Habito>> _habitos = [];
-  String? _restDayFecha;
+  List<String>? _restDays;
 
   // Colores personalizados de secciones (almacenados en Hive)
   final Map<String, Color> _sectionColors = {
@@ -149,8 +149,8 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
       final dailyRacha = await _rachaRepository.readDailyRacha();
       setState(() {
         _habitos = habitosMap.entries.toList();
-        _restDayFecha = dailyRacha?.fechaInicioPeriodoRecuperacion.isNotEmpty == true
-            ? dailyRacha!.fechaInicioPeriodoRecuperacion
+        _restDays = (dailyRacha != null && dailyRacha.fechasDescanso.isNotEmpty)
+            ? dailyRacha.fechasDescanso
             : null;
       });
       await _verificarResetearPorDia();
@@ -799,23 +799,20 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
       }
 
       final hoy = _obtenerFechaHoy();
-      for (final entry in _habitos) {
-        final habito = entry.value;
-        if (!_esHabitoDiario(habito)) continue;
-
-        final fechas = List<String>.from(habito.safeFechasCompletadas);
-        if (!fechas.contains(hoy)) {
-          fechas.add(hoy);
-          habito.fechasCompletadas = fechas;
-          habito.completadoHoy = true;
-          habito.fechaUltimoCompletado = hoy;
-          await _repository.update(entry.key, habito);
-        }
+      // Guardar la fecha de descanso en la racha, no en cada hábito
+      final updatedFechas = List<String>.from(dailyRacha.fechasDescanso);
+      if (!updatedFechas.contains(hoy)) {
+        updatedFechas.add(hoy);
       }
 
-      final updated = dailyRacha.copyWith(fechaInicioPeriodoRecuperacion: hoy);
+      final updated = dailyRacha.copyWith(
+        fechaInicioPeriodoRecuperacion: hoy,
+        contadorDescansos: dailyRacha.contadorDescansos + 1,
+        fechasDescanso: updatedFechas,
+      );
+
       await _rachaRepository.update(updated);
-      _restDayFecha = hoy;
+      _restDays = updatedFechas;
       final _ = ref.refresh(dailyRachaProvider);
       await _loadHabitos();
 
@@ -1171,7 +1168,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                 HabitContributionBoard(
                   fechasCompletadas: habito.safeFechasCompletadas,
                   baseColor: color,
-                  restDay: _esHabitoDiario(habito) ? _restDayFecha : null,
+                  restDays: _esHabitoDiario(habito) ? _restDays : null,
                 ),
               ],
             ),
@@ -1245,7 +1242,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                       context,
                       sectionColor: colorFisico,
                       iconData: Icons.directions_run,
-                      message: '¡Cuida tu cuerpo! Agrega tu primer hábito en la sección Físico presionando +.',
+                      message: '¡Cuida tu cuerpo! Agrega tu primer hábito en la sección Físico.',
                     )
                   else
                     ...habitosFisico.map((entry) => _buildHabitCard(context, entry)),
@@ -1267,7 +1264,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                       context,
                       sectionColor: colorMental,
                       iconData: Icons.psychology,
-                      message: '¡Entrena tu mente! Agrega tu primer hábito en la sección Mental presionando +.',
+                      message: '¡Entrena tu mente! Agrega tu primer hábito en la sección Mental.',
                     )
                   else
                     ...habitosMental.map((entry) => _buildHabitCard(context, entry)),
@@ -1289,7 +1286,7 @@ class _HabitsListScreenState extends ConsumerState<HabitsListScreen> {
                       context,
                       sectionColor: colorAlma,
                       iconData: Icons.spa,
-                      message: '¡Nutre tu paz interior! Agrega tu primer hábito en la sección Alma presionando +.',
+                      message: '¡Nutre tu paz interior! Agrega tu primer hábito en la sección Alma.',
                     )
                   else
                     ...habitosAlma.map((entry) => _buildHabitCard(context, entry)),
