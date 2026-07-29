@@ -13,11 +13,10 @@ class RachaIndicator extends ConsumerWidget {
     return SizedBox(
       width: double.infinity,
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          // === RACHA SEMANAL (Izquierda) ===
-          SizedBox(
-            width: 100,
+          // === RACHA SEMANAL ===
+          Expanded(
             child: weeklyRachaAsync.when(
               loading: () => _buildRachaSquare(
                 emoji: '🔥',
@@ -44,20 +43,16 @@ class RachaIndicator extends ConsumerWidget {
                   emoji: '🔥',
                   label: 'Semanas',
                   value: '${racha.cantidad}',
-                  color: (racha.cantidad == 0 || racha.enRiesgo) ?
-                   Colors.grey 
-                   : Colors.purple,
+                  color: (racha.cantidad == 0 || racha.enRiesgo) ? Colors.grey : Colors.purple,
                 );
               },
             ),
           ),
-          
-          // === ESPACIO EN MEDIO ===
-          const Spacer(),
-          
-          // === RACHA DIARIA (Derecha) ===
-          SizedBox(
-            width: 100,
+
+          const SizedBox(width: 12),
+
+          // === RACHA DIARIA ===
+          Expanded(
             child: dailyRachaAsync.when(
               loading: () => _buildRachaSquare(
                 emoji: '🔥',
@@ -84,9 +79,7 @@ class RachaIndicator extends ConsumerWidget {
                   emoji: '🔥',
                   label: 'Días',
                   value: '${racha.cantidad}',
-                  color: (racha.cantidad == 0 || racha.enRiesgo)
-                      ? Colors.grey
-                      : Colors.purple, // rojo oscuro cuando activa
+                  color: (racha.cantidad == 0 || racha.enRiesgo) ? Colors.grey : Colors.red,
                 );
               },
             ),

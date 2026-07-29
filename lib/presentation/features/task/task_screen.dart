@@ -631,6 +631,7 @@ class _TaskScreenState extends State<TaskScreen> with TickerProviderStateMixin {
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(16),
