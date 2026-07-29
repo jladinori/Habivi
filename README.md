@@ -129,6 +129,34 @@ flutter run -d ios
 flutter devices
 ```
 
+### **Paso 6: Generar APK para Android (Instalable en dispositivo)**
+
+Para generar un archivo APK que puedas instalar directamente en un dispositivo Android:
+
+**En Windows:**
+```bash
+generar_apk.bat
+```
+
+**En Linux/Mac:**
+```bash
+bash generar_apk.sh
+```
+
+**¿Qué hace el script automáticamente?**
+1. Limpia builds anteriores (`flutter clean`)
+2. Obtiene las dependencias (`flutter pub get`)
+3. Regenera los modelos de Hive con los últimos cambios del código (`build_runner`)
+4. Compila el APK en modo release (`flutter build apk --release`)
+5. Copia el APK a la carpeta `apk_output/` con la fecha y hora actual
+
+El APK generado se encontrará en:
+```
+apk_output/Habivi_v1.0.0_YYYYMMDD_HHMMSS.apk
+```
+
+> Transfiere este archivo a tu dispositivo Android, ábrelo e instálalo. Es posible que necesites habilitar "Orígenes desconocidos" en los ajustes de seguridad.
+
 ---
 
 ## 📋 **Verificación de que Hive Funciona Correctamente**

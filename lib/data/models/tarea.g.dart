@@ -24,10 +24,10 @@ class TareaAdapter extends TypeAdapter<Tarea> {
       fecha: fields[4] as String,
       notas: fields[5] as String,
       completada: fields[6] as bool,
-      archivada: fields[7] as bool? ?? false,
+      archivada: fields[7] as bool,
     );
   }
- 
+
   @override
   void write(BinaryWriter writer, Tarea obj) {
     writer
