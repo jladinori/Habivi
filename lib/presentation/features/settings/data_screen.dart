@@ -117,7 +117,7 @@ class _DataSettingsScreenState extends State<DataSettingsScreen> {
             child: ListTile(
               leading: Icon(Icons.save_alt, color: cs.primary),
               title: const Text('Guardar copia local'),
-              subtitle: Text(kIsWeb
+              subtitle: const Text(kIsWeb
                   ? 'Descarga un archivo .json con todos tus datos'
                   : 'Genera un archivo .json que puedes guardar o compartir'),
               trailing: _exporting

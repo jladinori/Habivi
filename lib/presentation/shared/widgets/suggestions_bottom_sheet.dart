@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:habivi/domain/models/habit_suggestion.dart';
 import 'package:habivi/domain/services/habit_suggestions_service.dart';
 
 /// Modal que muestra sugerencias contextualizadas para un hábito específico

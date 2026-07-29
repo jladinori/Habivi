@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:habivi/data/models/habito.dart';
 import 'package:habivi/core/utils/app_clock.dart';
-import 'package:habivi/data/models/racha.dart';
 import 'package:habivi/domain/services/racha_service.dart';
 
 void main() {
